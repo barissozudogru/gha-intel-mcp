@@ -9,7 +9,9 @@
 
 An MCP (Model Context Protocol) server that connects to the GitHub API and gives any MCP-capable AI client the ability to analyse GitHub Actions workflows, surface timing bottlenecks, review workflow configurations, and report billing usage.
 
-## What It Does
+**Compatible With:** Claude Desktop | Claude Code | Cursor | Windsurf | VS Code | Cline | Continue | Zed | JetBrains | ChatGPT
+
+## Tools
 
 | Tool | Description |
 |------|-------------|
@@ -22,12 +24,20 @@ An MCP (Model Context Protocol) server that connects to the GitHub API and gives
 - Node.js >= 18 (uses native `fetch`)
 - A GitHub personal access token with `repo` and `read:org` scopes
 
-## Setup — Claude Desktop
+## Setup
 
-Add the following to your `claude_desktop_config.json`:
+Three transport modes are available. Choose whichever fits your deployment:
 
-**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+---
+
+### Option A: stdio (local — recommended for desktop clients)
+
+The server runs as a subprocess of the MCP client over stdin/stdout. No network port required.
+
+#### Claude Desktop
+
+`~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
+`%APPDATA%\Claude\claude_desktop_config.json` (Windows)
 
 ```json
 {
@@ -36,50 +46,234 @@ Add the following to your `claude_desktop_config.json`:
       "command": "npx",
       "args": ["-y", "@barissozudogru/gha-optimizer-mcp"],
       "env": {
-        "GITHUB_TOKEN": "ghp_your_token_here"
+        "GITHUB_TOKEN": "ghp_your_token"
       }
     }
   }
 }
 ```
 
-Restart Claude Desktop after saving. The three tools will be available immediately.
-
-## Setup — Local build
+#### Claude Code
 
 ```bash
-git clone https://github.com/barissozudogru/gha-optimizer-mcp.git
-cd gha-optimizer-mcp
-npm install
-npm run build
-
-# Run directly
-GITHUB_TOKEN=ghp_... node dist/index.js
+claude mcp add gha-optimizer -e GITHUB_TOKEN=ghp_your_token -- npx -y @barissozudogru/gha-optimizer-mcp
 ```
 
-For local builds, point Claude Desktop at the absolute path:
+#### Cursor
+
+`~/.cursor/mcp.json`
 
 ```json
 {
   "mcpServers": {
     "gha-optimizer": {
-      "command": "node",
-      "args": ["/absolute/path/to/gha-optimizer-mcp/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "@barissozudogru/gha-optimizer-mcp"],
       "env": {
-        "GITHUB_TOKEN": "ghp_your_token_here"
+        "GITHUB_TOKEN": "ghp_your_token"
       }
     }
   }
 }
 ```
+
+#### Windsurf
+
+`~/.codeium/windsurf/mcp_config.json`
+
+```json
+{
+  "mcpServers": {
+    "gha-optimizer": {
+      "command": "npx",
+      "args": ["-y", "@barissozudogru/gha-optimizer-mcp"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_your_token"
+      }
+    }
+  }
+}
+```
+
+#### VS Code + Copilot
+
+`.vscode/mcp.json` (workspace) or user settings
+
+```json
+{
+  "servers": {
+    "gha-optimizer": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@barissozudogru/gha-optimizer-mcp"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_your_token"
+      }
+    }
+  }
+}
+```
+
+#### Cline
+
+Open Cline settings, navigate to MCP Servers, and add:
+
+```json
+{
+  "mcpServers": {
+    "gha-optimizer": {
+      "command": "npx",
+      "args": ["-y", "@barissozudogru/gha-optimizer-mcp"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_your_token"
+      }
+    }
+  }
+}
+```
+
+#### Continue.dev
+
+`~/.continue/config.yaml`
+
+```yaml
+mcpServers:
+  - name: gha-optimizer
+    command: npx
+    args:
+      - -y
+      - "@barissozudogru/gha-optimizer-mcp"
+    env:
+      GITHUB_TOKEN: ghp_your_token
+```
+
+#### Zed
+
+`~/.config/zed/settings.json`
+
+```json
+{
+  "context_servers": {
+    "gha-optimizer": {
+      "command": {
+        "path": "npx",
+        "args": ["-y", "@barissozudogru/gha-optimizer-mcp"],
+        "env": {
+          "GITHUB_TOKEN": "ghp_your_token"
+        }
+      }
+    }
+  }
+}
+```
+
+#### JetBrains (IntelliJ, PyCharm, WebStorm, etc.)
+
+Go to **Settings > Tools > AI Assistant > MCP** and add:
+
+```json
+{
+  "mcpServers": {
+    "gha-optimizer": {
+      "command": "npx",
+      "args": ["-y", "@barissozudogru/gha-optimizer-mcp"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_your_token"
+      }
+    }
+  }
+}
+```
+
+---
+
+### Option B: HTTP (remote or cloud clients)
+
+Start the server in HTTP mode and point clients at the endpoint:
+
+```bash
+GITHUB_TOKEN=ghp_your_token npx @barissozudogru/gha-optimizer-mcp --http
+# Server listens on http://0.0.0.0:3000/mcp
+# Health check: http://localhost:3000/health
+```
+
+Or set via environment variable instead of the flag:
+
+```bash
+TRANSPORT=http PORT=3000 GITHUB_TOKEN=ghp_your_token npx @barissozudogru/gha-optimizer-mcp
+```
+
+#### Cursor (HTTP)
+
+`~/.cursor/mcp.json`
+
+```json
+{
+  "mcpServers": {
+    "gha-optimizer": {
+      "url": "http://localhost:3000/mcp"
+    }
+  }
+}
+```
+
+#### VS Code + Copilot (HTTP)
+
+`.vscode/mcp.json`
+
+```json
+{
+  "servers": {
+    "gha-optimizer": {
+      "type": "http",
+      "url": "http://localhost:3000/mcp"
+    }
+  }
+}
+```
+
+#### Windsurf (HTTP)
+
+`~/.codeium/windsurf/mcp_config.json`
+
+```json
+{
+  "mcpServers": {
+    "gha-optimizer": {
+      "serverUrl": "http://localhost:3000/mcp"
+    }
+  }
+}
+```
+
+#### Continue.dev (HTTP)
+
+`~/.continue/config.yaml`
+
+```yaml
+mcpServers:
+  - name: gha-optimizer
+    url: http://localhost:3000/mcp
+```
+
+---
+
+### Option C: Docker
+
+```bash
+docker build -t gha-optimizer-mcp .
+docker run -p 3000:3000 -e GITHUB_TOKEN=ghp_your_token gha-optimizer-mcp
+```
+
+The container starts in HTTP mode by default. Point your client at `http://localhost:3000/mcp`.
+
+---
 
 ## Tool Reference
 
 ### list_workflow_performance
 
 Fetch real run timing data and compute job-level statistics.
-
-**Input:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -95,8 +289,6 @@ Fetch real run timing data and compute job-level statistics.
 ### analyze_workflow_config
 
 Parse and audit a workflow YAML for optimisation opportunities.
-
-**Input:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -121,8 +313,6 @@ Parse and audit a workflow YAML for optimisation opportunities.
 
 Retrieve billing and cache consumption data.
 
-**Input:**
-
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `owner` | string | yes | GitHub username or organisation |
@@ -130,11 +320,15 @@ Retrieve billing and cache consumption data.
 
 **Output:** Total minutes used, plan utilisation, estimated cost broken down by runner type (Ubuntu / macOS / Windows / large runners), plus per-repo cache size and utilisation percentage.
 
+---
+
 ## Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `GITHUB_TOKEN` | yes | GitHub personal access token. Requires `repo` scope for private repos, `read:org` for org billing. |
+| `TRANSPORT` | no | Set to `http` to enable HTTP mode (default: stdio). |
+| `PORT` | no | HTTP port when running in HTTP mode (default: `3000`). |
 
 ## License
 

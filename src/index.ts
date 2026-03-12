@@ -3,6 +3,8 @@
 import { createRequire } from 'node:module';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import express from 'express';
 import { z } from 'zod';
 
 const require = createRequire(import.meta.url);
@@ -991,9 +993,32 @@ server.registerTool(
 // ---------------------------------------------------------------------------
 
 async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  process.stderr.write('gha-optimizer-mcp server running on stdio\n');
+  const useHttp = process.argv.includes('--http') || (process.env.TRANSPORT ?? '').toLowerCase() === 'http';
+
+  if (useHttp) {
+    const app = express();
+    app.use(express.json());
+    const port = parseInt(process.env.PORT || '3000', 10);
+
+    app.post('/mcp', async (req, res) => {
+      const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
+      res.on('close', () => { transport.close(); });
+      await server.connect(transport);
+      await transport.handleRequest(req, res, req.body);
+    });
+
+    app.get('/health', (_req, res) => {
+      res.json({ status: 'ok', server: 'gha-optimizer-mcp', version: VERSION });
+    });
+
+    app.listen(port, () => {
+      process.stderr.write(`gha-optimizer-mcp v${VERSION} listening on http://0.0.0.0:${port}/mcp\n`);
+    });
+  } else {
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    process.stderr.write(`gha-optimizer-mcp v${VERSION} running on stdio\n`);
+  }
 }
 
 main().catch((err) => {

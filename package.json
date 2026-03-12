@@ -1,6 +1,6 @@
 {
   "name": "@barissozudogru/gha-optimizer-mcp",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "MCP server that analyzes and optimizes GitHub Actions workflows",
   "type": "module",
   "main": "dist/index.js",
@@ -17,7 +17,7 @@
     "README.md"
   ],
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "access": "public"
   },
   "repository": {
     "type": "git",
@@ -37,9 +37,11 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
+    "express": "^5.1.0",
     "zod": "^3.25.0"
   },
   "devDependencies": {
+    "@types/express": "^5.0.0",
     "@types/node": "^25.5.0",
     "typescript": "^5.9.3"
   }

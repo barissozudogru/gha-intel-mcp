@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-03-12
+
+### Fixed
+
+- Run duration now reports wall-clock time instead of summing parallel jobs (was inflated by Nx)
+- Jobs API now uses per_page=100 (was silently dropping jobs in matrix workflows with >30 combinations)
+- Rate limit handling: retries on 429 with Retry-After, exponential backoff on 5xx errors
+- Yarn install detection regex no longer false-positives on yarn test/build/lint
+- fetch-depth regex now matches multi-digit values (10, 50, 100)
+- Billing run timing uses job timestamps instead of unreliable updated_at field
+
+### Added
+
+- Parallel API calls with concurrency limit of 10 (was sequential, 10x faster)
+- Error handling in all tool callbacks with proper MCP isError responses
+- Fetch timeout (15s) prevents hung connections
+- Workflow content validation rejects non-GHA YAML
+- Input validation on owner/repo parameters
+- Dynamic version from package.json (no more hardcoded strings)
+
+### Removed
+
+- structuredContent from tool responses (no outputSchema was defined)
+
 ## [0.1.0] - 2026-03-12
 
 ### Added

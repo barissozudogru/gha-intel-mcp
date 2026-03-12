@@ -1,6 +1,6 @@
 {
   "name": "@barissozudogru/gha-optimizer-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server that analyzes and optimizes GitHub Actions workflows",
   "type": "module",
   "main": "dist/index.js",

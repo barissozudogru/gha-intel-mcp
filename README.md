@@ -1,13 +1,14 @@
-# gha-optimizer-mcp
+# gha-intel-mcp
 
 <p align="center">
+  <img alt="version" src="https://img.shields.io/badge/npm-0.4.0-cb3837?style=flat-square&logo=npm&logoColor=white" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white" />
   <img alt="Node" src="https://img.shields.io/badge/Node-%3E%3D18-339933?style=flat-square&logo=node.js&logoColor=white" />
-  <img alt="License" src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" />
-  <img alt="MCP" src="https://img.shields.io/badge/MCP-compatible-8A2BE2?style=flat-square" />
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" />
+  <img alt="MCP Server" src="https://img.shields.io/badge/MCP-Server-8A2BE2?style=flat-square" />
 </p>
 
-An MCP (Model Context Protocol) server that connects to the GitHub API and gives any MCP-capable AI client the ability to analyse GitHub Actions workflows, surface timing bottlenecks, review workflow configurations, and report billing usage.
+A GitHub Actions intelligence MCP server that connects to the GitHub API and gives any MCP-capable AI client deep insight into workflow timing, configuration quality, and billing consumption. Surface bottlenecks, audit configurations, and understand costs — without leaving your AI client.
 
 **Compatible With:** Claude Desktop | Claude Code | Cursor | Windsurf | VS Code | Cline | Continue | Zed | JetBrains | ChatGPT
 
@@ -42,9 +43,9 @@ The server runs as a subprocess of the MCP client over stdin/stdout. No network 
 ```json
 {
   "mcpServers": {
-    "gha-optimizer": {
+    "gha-intel": {
       "command": "npx",
-      "args": ["-y", "@barissozudogru/gha-optimizer-mcp"],
+      "args": ["-y", "@barissozudogru/gha-intel-mcp"],
       "env": {
         "GITHUB_TOKEN": "ghp_your_token"
       }
@@ -56,7 +57,7 @@ The server runs as a subprocess of the MCP client over stdin/stdout. No network 
 #### Claude Code
 
 ```bash
-claude mcp add gha-optimizer -e GITHUB_TOKEN=ghp_your_token -- npx -y @barissozudogru/gha-optimizer-mcp
+claude mcp add gha-intel -e GITHUB_TOKEN=ghp_your_token -- npx -y @barissozudogru/gha-intel-mcp
 ```
 
 #### Cursor
@@ -66,9 +67,9 @@ claude mcp add gha-optimizer -e GITHUB_TOKEN=ghp_your_token -- npx -y @barissozu
 ```json
 {
   "mcpServers": {
-    "gha-optimizer": {
+    "gha-intel": {
       "command": "npx",
-      "args": ["-y", "@barissozudogru/gha-optimizer-mcp"],
+      "args": ["-y", "@barissozudogru/gha-intel-mcp"],
       "env": {
         "GITHUB_TOKEN": "ghp_your_token"
       }
@@ -84,9 +85,9 @@ claude mcp add gha-optimizer -e GITHUB_TOKEN=ghp_your_token -- npx -y @barissozu
 ```json
 {
   "mcpServers": {
-    "gha-optimizer": {
+    "gha-intel": {
       "command": "npx",
-      "args": ["-y", "@barissozudogru/gha-optimizer-mcp"],
+      "args": ["-y", "@barissozudogru/gha-intel-mcp"],
       "env": {
         "GITHUB_TOKEN": "ghp_your_token"
       }
@@ -102,10 +103,10 @@ claude mcp add gha-optimizer -e GITHUB_TOKEN=ghp_your_token -- npx -y @barissozu
 ```json
 {
   "servers": {
-    "gha-optimizer": {
+    "gha-intel": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@barissozudogru/gha-optimizer-mcp"],
+      "args": ["-y", "@barissozudogru/gha-intel-mcp"],
       "env": {
         "GITHUB_TOKEN": "ghp_your_token"
       }
@@ -121,9 +122,9 @@ Open Cline settings, navigate to MCP Servers, and add:
 ```json
 {
   "mcpServers": {
-    "gha-optimizer": {
+    "gha-intel": {
       "command": "npx",
-      "args": ["-y", "@barissozudogru/gha-optimizer-mcp"],
+      "args": ["-y", "@barissozudogru/gha-intel-mcp"],
       "env": {
         "GITHUB_TOKEN": "ghp_your_token"
       }
@@ -138,11 +139,11 @@ Open Cline settings, navigate to MCP Servers, and add:
 
 ```yaml
 mcpServers:
-  - name: gha-optimizer
+  - name: gha-intel
     command: npx
     args:
       - -y
-      - "@barissozudogru/gha-optimizer-mcp"
+      - "@barissozudogru/gha-intel-mcp"
     env:
       GITHUB_TOKEN: ghp_your_token
 ```
@@ -154,10 +155,10 @@ mcpServers:
 ```json
 {
   "context_servers": {
-    "gha-optimizer": {
+    "gha-intel": {
       "command": {
         "path": "npx",
-        "args": ["-y", "@barissozudogru/gha-optimizer-mcp"],
+        "args": ["-y", "@barissozudogru/gha-intel-mcp"],
         "env": {
           "GITHUB_TOKEN": "ghp_your_token"
         }
@@ -174,9 +175,9 @@ Go to **Settings > Tools > AI Assistant > MCP** and add:
 ```json
 {
   "mcpServers": {
-    "gha-optimizer": {
+    "gha-intel": {
       "command": "npx",
-      "args": ["-y", "@barissozudogru/gha-optimizer-mcp"],
+      "args": ["-y", "@barissozudogru/gha-intel-mcp"],
       "env": {
         "GITHUB_TOKEN": "ghp_your_token"
       }
@@ -192,7 +193,7 @@ Go to **Settings > Tools > AI Assistant > MCP** and add:
 Start the server in HTTP mode and point clients at the endpoint:
 
 ```bash
-GITHUB_TOKEN=ghp_your_token npx @barissozudogru/gha-optimizer-mcp --http
+GITHUB_TOKEN=ghp_your_token npx @barissozudogru/gha-intel-mcp --http
 # Server listens on http://0.0.0.0:3000/mcp
 # Health check: http://localhost:3000/health
 ```
@@ -200,7 +201,7 @@ GITHUB_TOKEN=ghp_your_token npx @barissozudogru/gha-optimizer-mcp --http
 Or set via environment variable instead of the flag:
 
 ```bash
-TRANSPORT=http PORT=3000 GITHUB_TOKEN=ghp_your_token npx @barissozudogru/gha-optimizer-mcp
+TRANSPORT=http PORT=3000 GITHUB_TOKEN=ghp_your_token npx @barissozudogru/gha-intel-mcp
 ```
 
 #### Cursor (HTTP)
@@ -210,7 +211,7 @@ TRANSPORT=http PORT=3000 GITHUB_TOKEN=ghp_your_token npx @barissozudogru/gha-opt
 ```json
 {
   "mcpServers": {
-    "gha-optimizer": {
+    "gha-intel": {
       "url": "http://localhost:3000/mcp"
     }
   }
@@ -224,7 +225,7 @@ TRANSPORT=http PORT=3000 GITHUB_TOKEN=ghp_your_token npx @barissozudogru/gha-opt
 ```json
 {
   "servers": {
-    "gha-optimizer": {
+    "gha-intel": {
       "type": "http",
       "url": "http://localhost:3000/mcp"
     }
@@ -239,7 +240,7 @@ TRANSPORT=http PORT=3000 GITHUB_TOKEN=ghp_your_token npx @barissozudogru/gha-opt
 ```json
 {
   "mcpServers": {
-    "gha-optimizer": {
+    "gha-intel": {
       "serverUrl": "http://localhost:3000/mcp"
     }
   }
@@ -252,7 +253,7 @@ TRANSPORT=http PORT=3000 GITHUB_TOKEN=ghp_your_token npx @barissozudogru/gha-opt
 
 ```yaml
 mcpServers:
-  - name: gha-optimizer
+  - name: gha-intel
     url: http://localhost:3000/mcp
 ```
 
@@ -261,8 +262,8 @@ mcpServers:
 ### Option C: Docker
 
 ```bash
-docker build -t gha-optimizer-mcp .
-docker run -p 3000:3000 -e GITHUB_TOKEN=ghp_your_token gha-optimizer-mcp
+docker build -t gha-intel-mcp .
+docker run -p 3000:3000 -e GITHUB_TOKEN=ghp_your_token gha-intel-mcp
 ```
 
 The container starts in HTTP mode by default. Point your client at `http://localhost:3000/mcp`.

@@ -1,8 +1,8 @@
-name: gha-optimizer-mcp
-description: Analyze and optimize GitHub Actions workflows - timing stats, config audit, billing usage
+name: gha-intel-mcp
+description: GitHub Actions intelligence MCP server - workflow timing analysis, configuration audit, and billing insights
 author: barissozudogru
 license: MIT
-repository: https://github.com/barissozudogru/gha-optimizer-mcp
+repository: https://github.com/barissozudogru/gha-intel-mcp
 startCommand:
   type: stdio
   configSchema:
@@ -16,6 +16,6 @@ startCommand:
   commandFunction: |-
     (config) => ({
       command: 'npx',
-      args: ['-y', '@barissozudogru/gha-optimizer-mcp'],
+      args: ['-y', '@barissozudogru/gha-intel-mcp'],
       env: { GITHUB_TOKEN: config.GITHUB_TOKEN }
     })

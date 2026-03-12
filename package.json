@@ -1,11 +1,11 @@
 {
-  "name": "@barissozudogru/gha-optimizer-mcp",
-  "version": "0.3.0",
-  "description": "MCP server that analyzes and optimizes GitHub Actions workflows",
+  "name": "@barissozudogru/gha-intel-mcp",
+  "version": "0.4.0",
+  "description": "GitHub Actions intelligence MCP server - workflow timing analysis, configuration audit, and billing insights",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "gha-optimizer-mcp": "dist/index.js"
+    "gha-intel-mcp": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/barissozudogru/gha-optimizer-mcp.git"
+    "url": "https://github.com/barissozudogru/gha-intel-mcp.git"
   },
   "keywords": [
     "mcp",

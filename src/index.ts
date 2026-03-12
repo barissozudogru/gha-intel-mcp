@@ -36,7 +36,7 @@ async function githubFetch<T>(path: string, retries = 3): Promise<T> {
         Authorization: `Bearer ${token}`,
         Accept: 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28',
-        'User-Agent': `gha-optimizer-mcp/${VERSION}`,
+        'User-Agent': `gha-intel-mcp/${VERSION}`,
       },
     });
 
@@ -214,7 +214,7 @@ const repoSchema = z
 // MCP Server
 // ---------------------------------------------------------------------------
 
-const server = new McpServer({ name: 'gha-optimizer-mcp', version: VERSION });
+const server = new McpServer({ name: 'gha-intel-mcp', version: VERSION });
 
 // ---------------------------------------------------------------------------
 // Tool 1: list_workflow_performance
@@ -1008,16 +1008,16 @@ async function main() {
     });
 
     app.get('/health', (_req, res) => {
-      res.json({ status: 'ok', server: 'gha-optimizer-mcp', version: VERSION });
+      res.json({ status: 'ok', server: 'gha-intel-mcp', version: VERSION });
     });
 
     app.listen(port, () => {
-      process.stderr.write(`gha-optimizer-mcp v${VERSION} listening on http://0.0.0.0:${port}/mcp\n`);
+      process.stderr.write(`gha-intel-mcp v${VERSION} listening on http://0.0.0.0:${port}/mcp\n`);
     });
   } else {
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    process.stderr.write(`gha-optimizer-mcp v${VERSION} running on stdio\n`);
+    process.stderr.write(`gha-intel-mcp v${VERSION} running on stdio\n`);
   }
 }
 

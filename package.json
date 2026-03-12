@@ -1,0 +1,46 @@
+{
+  "name": "@barissozudogru/gha-optimizer-mcp",
+  "version": "0.1.0",
+  "description": "MCP server that analyzes and optimizes GitHub Actions workflows",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "gha-optimizer-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/barissozudogru/gha-optimizer-mcp.git"
+  },
+  "keywords": [
+    "mcp",
+    "github-actions",
+    "optimization",
+    "ci-cd",
+    "workflow"
+  ],
+  "author": "Baris Sozudogru",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="888" height="200" viewBox="0 0 888 200">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1C1917"/>
+      <stop offset="50%" stop-color="#292524"/>
+      <stop offset="100%" stop-color="#44403C"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#FBBF24"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="888" height="200" rx="12" fill="url(#bg-grad)"/>
+
+  <!-- Dot grid pattern -->
+  <g opacity="0.06">
+    <pattern id="dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="12" cy="12" r="1" fill="white"/>
+    </pattern>
+    <rect width="888" height="200" fill="url(#dots)"/>
+  </g>
+
+  <!-- Accent line at top -->
+  <rect x="0" y="0" width="888" height="3" rx="0" fill="url(#accent)" opacity="0.8"/>
+
+  <!-- Logo mark (small hexagon) -->
+  <g transform="translate(48, 60)">
+    <polygon points="40,40 22.4,9.7 57.6,9.7" fill="#FBBF24" opacity="0.95"/>
+    <polygon points="40,40 57.6,9.7 75.2,40" fill="#F59E0B" opacity="0.95"/>
+    <polygon points="40,40 75.2,40 57.6,70.3" fill="#D97706" opacity="0.95"/>
+    <polygon points="40,40 57.6,70.3 22.4,70.3" fill="#B45309" opacity="0.90"/>
+    <polygon points="40,40 22.4,70.3 4.8,40" fill="#D97706" opacity="0.92"/>
+    <polygon points="40,40 4.8,40 22.4,9.7" fill="#FBBF24" opacity="0.88"/>
+    <polygon points="75.2,40 57.6,70.3 22.4,70.3 4.8,40 22.4,9.7 57.6,9.7"
+             fill="none" stroke="#92400E" stroke-width="0.8" opacity="0.3"/>
+    <!-- Lightning bolt glyph -->
+    <path d="M45,21 L33,41 L39,41 L35,59 L49,37 L42,37 Z" fill="white" opacity="0.95"/>
+  </g>
+
+  <!-- Title -->
+  <text x="148" y="92" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+        font-size="32" font-weight="700" fill="white" letter-spacing="-0.5">
+    gha-intel-mcp
+  </text>
+
+  <!-- Tagline -->
+  <text x="148" y="120" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+        font-size="14" fill="white" opacity="0.65">
+    GitHub Actions intelligence. Workflow performance, config audit, billing insights.
+  </text>
+
+  <!-- Feature pills -->
+  <g transform="translate(148, 138)">
+    <rect x="0" y="0" width="92" height="24" rx="12" fill="#F59E0B" opacity="0.2"/>
+    <text x="46" y="16" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+          font-size="11" fill="#FCD34D" text-anchor="middle">MCP Server</text>
+
+    <rect x="102" y="0" width="86" height="24" rx="12" fill="#F59E0B" opacity="0.2"/>
+    <text x="145" y="16" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+          font-size="11" fill="#FCD34D" text-anchor="middle">TypeScript</text>
+
+    <rect x="198" y="0" width="100" height="24" rx="12" fill="#F59E0B" opacity="0.2"/>
+    <text x="248" y="16" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+          font-size="11" fill="#FCD34D" text-anchor="middle">GitHub API</text>
+
+    <rect x="308" y="0" width="92" height="24" rx="12" fill="#F59E0B" opacity="0.2"/>
+    <text x="354" y="16" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+          font-size="11" fill="#FCD34D" text-anchor="middle">Workflows</text>
+
+    <rect x="410" y="0" width="76" height="24" rx="12" fill="#F59E0B" opacity="0.2"/>
+    <text x="448" y="16" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+          font-size="11" fill="#FCD34D" text-anchor="middle">Billing</text>
+  </g>
+</svg>

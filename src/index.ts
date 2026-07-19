@@ -284,6 +284,11 @@ server.registerTool(
         const { wall_clock_seconds, billable_seconds } = computeRunTiming(jobsData.jobs);
 
         for (const job of jobsData.jobs) {
+          // Jobs that were skipped never executed and carry no timestamps.
+          // durationSeconds would return 0 for them, injecting bogus samples
+          // that drag down the average, force min to 0s, and overcount runs.
+          if (!job.started_at || !job.completed_at) continue;
+
           const dur = durationSeconds(job.started_at, job.completed_at);
 
           if (!jobDurations[job.name]) jobDurations[job.name] = [];
@@ -291,6 +296,7 @@ server.registerTool(
 
           if (!stepDurations[job.name]) stepDurations[job.name] = {};
           for (const step of job.steps) {
+            if (!step.started_at || !step.completed_at) continue;
             const sDur = durationSeconds(step.started_at, step.completed_at);
             if (!stepDurations[job.name][step.name]) stepDurations[job.name][step.name] = [];
             stepDurations[job.name][step.name].push(sDur);

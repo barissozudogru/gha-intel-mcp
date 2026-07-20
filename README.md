@@ -2,14 +2,6 @@
   <img src="./assets/banner-gha-intel.svg" alt="gha-intel-mcp" width="888" />
 </p>
 
-<p align="center">
-  <img alt="version" src="https://img.shields.io/badge/npm-0.4.0-F59E0B?style=flat-square&logo=npm&logoColor=white" />
-  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white" />
-  <img alt="Node" src="https://img.shields.io/badge/Node-%3E%3D18-339933?style=flat-square&logo=node.js&logoColor=white" />
-  <img alt="License" src="https://img.shields.io/badge/License-MIT-F59E0B?style=flat-square" />
-  <img alt="MCP Server" src="https://img.shields.io/badge/MCP-Server-0F172A?style=flat-square" />
-</p>
-
 A GitHub Actions intelligence MCP server that connects to the GitHub API and gives any MCP-capable AI client deep insight into workflow timing, configuration quality, and billing consumption. Surface bottlenecks, audit configurations, and understand costs — without leaving your AI client.
 
 **Compatible With:** Claude Desktop | Claude Code | Cursor | Windsurf | VS Code | Cline | Continue | Zed | JetBrains | ChatGPT

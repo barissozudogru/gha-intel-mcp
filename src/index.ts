@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import { createRequire } from 'node:module';
+import { realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
@@ -147,33 +149,37 @@ interface CacheUsageResponse {
 // Utility: duration helpers
 // ---------------------------------------------------------------------------
 
-function durationSeconds(start: string | null, end: string | null): number {
+export function durationSeconds(start: string | null, end: string | null): number {
   if (!start || !end) return 0;
-  return Math.max(0, (new Date(end).getTime() - new Date(start).getTime()) / 1000);
+  const startTime = new Date(start).getTime();
+  const endTime = new Date(end).getTime();
+  if (Number.isNaN(startTime) || Number.isNaN(endTime)) return 0;
+  return Math.max(0, (endTime - startTime) / 1000);
 }
 
-function percentile(sorted: number[], p: number): number {
+export function percentile(sorted: number[], p: number): number {
   if (sorted.length === 0) return 0;
   const idx = Math.ceil((p / 100) * sorted.length) - 1;
   return sorted[Math.max(0, Math.min(idx, sorted.length - 1))];
 }
 
-function avg(values: number[]): number {
+export function avg(values: number[]): number {
   if (values.length === 0) return 0;
   return values.reduce((a, b) => a + b, 0) / values.length;
 }
 
-function fmtSeconds(s: number): string {
+export function fmtSeconds(s: number): string {
   if (s < 60) return `${s.toFixed(1)}s`;
-  const m = Math.floor(s / 60);
-  const rem = (s % 60).toFixed(0).padStart(2, '0');
+  const totalSec = Math.round(s);
+  const m = Math.floor(totalSec / 60);
+  const rem = String(totalSec % 60).padStart(2, '0');
   return `${m}m ${rem}s`;
 }
 
 // Compute wall-clock seconds and billable seconds from a list of jobs.
 // Wall-clock: earliest job start → latest job completion (parallel-aware).
 // Billable:   sum of all individual job durations (what GitHub charges).
-function computeRunTiming(jobs: Job[]): { wall_clock_seconds: number; billable_seconds: number } {
+export function computeRunTiming(jobs: Job[]): { wall_clock_seconds: number; billable_seconds: number } {
   let earliestStart: number | null = null;
   let latestEnd: number | null = null;
   let billable = 0;
@@ -182,9 +188,11 @@ function computeRunTiming(jobs: Job[]): { wall_clock_seconds: number; billable_s
     if (job.started_at && job.completed_at) {
       const start = new Date(job.started_at).getTime();
       const end = new Date(job.completed_at).getTime();
-      if (earliestStart === null || start < earliestStart) earliestStart = start;
-      if (latestEnd === null || end > latestEnd) latestEnd = end;
-      billable += Math.max(0, (end - start) / 1000);
+      if (!Number.isNaN(start) && !Number.isNaN(end)) {
+        if (earliestStart === null || start < earliestStart) earliestStart = start;
+        if (latestEnd === null || end > latestEnd) latestEnd = end;
+        billable += Math.max(0, (end - start) / 1000);
+      }
     }
   }
 
@@ -1027,7 +1035,18 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  process.stderr.write(`Fatal error: ${err instanceof Error ? err.message : String(err)}\n`);
-  process.exit(1);
-});
+const isDirectExecution = () => {
+  if (!process.argv[1]) return false;
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+};
+
+if (isDirectExecution()) {
+  main().catch((err) => {
+    process.stderr.write(`Fatal error: ${err instanceof Error ? err.message : String(err)}\n`);
+    process.exit(1);
+  });
+}

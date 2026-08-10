@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="./assets/banner-gha-intel.svg" alt="gha-intel-mcp" width="888" />
-</p>
+<img src="./assets/banner-gha-intel.svg" alt="gha-intel-mcp" width="888" />
 
 A GitHub Actions intelligence MCP server that connects to the GitHub API and gives any MCP-capable AI client deep insight into workflow timing, configuration quality, and billing consumption. Surface bottlenecks, audit configurations, and understand costs — without leaving your AI client.
 

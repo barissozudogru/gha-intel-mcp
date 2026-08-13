@@ -21,7 +21,7 @@ Three transport modes are available. Choose whichever fits your deployment:
 
 ---
 
-### Option A: stdio (local  -  recommended for desktop clients)
+### Option A: stdio (local, recommended for desktop clients)
 
 The server runs as a subprocess of the MCP client over stdin/stdout. No network port required.
 

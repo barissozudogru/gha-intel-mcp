@@ -1,16 +1,14 @@
 <img src="./assets/banner-gha-intel.svg" alt="gha-intel-mcp" width="888" />
 
-A GitHub Actions intelligence MCP server that connects to the GitHub API and gives any MCP-capable AI client deep insight into workflow timing, configuration quality, and billing consumption. Surface bottlenecks, audit configurations, and understand costs — without leaving your AI client.
-
-**Compatible With:** Claude Desktop | Claude Code | Cursor | Windsurf | VS Code | Cline | Continue | Zed | JetBrains | ChatGPT
+An MCP server for GitHub Actions workflow timing analysis, configuration auditing, and billing insights.
 
 ## Tools
 
 | Tool | Description |
 |------|-------------|
-| `list_workflow_performance` | Fetches the last N completed runs of a workflow and computes per-job and per-step timing statistics: average, min, max, and p95 duration. Reveals exactly which jobs are slowing your pipeline down. |
-| `analyze_workflow_config` | Parses a workflow YAML string and evaluates it across nine categories: caching, parallelism, concurrency, artifacts, checkout depth, timeouts, runner pinning, Docker layer caching, and trigger efficiency. Returns findings with concrete recommendations. |
-| `get_billing_usage` | Returns Actions billing minutes broken down by runner type with estimated cost, plus per-repo cache utilisation and a wall-clock time estimate for recent runs. |
+| `list_workflow_performance` | Computes average, min, max, and p95 duration statistics for recent workflow runs. |
+| `analyze_workflow_config` | Evaluates workflow YAML for caching, parallelism, concurrency, artifacts, checkout depth, timeouts, runner pinning, Docker caching, and triggers. |
+| `get_billing_usage` | Returns Actions billing minutes and estimated cost by runner type, plus per-repo cache utilisation. |
 
 ## Requirements
 
@@ -289,16 +287,7 @@ Parse and audit a workflow YAML for optimisation opportunities.
 
 **Output:** Findings grouped by severity (critical / warning / info / good) across nine categories, each with a concrete recommendation.
 
-**Categories analysed:**
-- Dependency caching (actions/cache, setup-node cache, pip cache)
-- Matrix strategy and fail-fast
-- Concurrency groups and cancel-in-progress
-- Artifact uploads
-- Git checkout depth
-- Job timeout-minutes
-- Runner version pinning
-- Docker layer caching
-- Trigger path filters and duplicate triggers
+**Categories analysed:** Dependency caching, matrix strategy and fail-fast, concurrency groups and cancel-in-progress, artifact uploads, git checkout depth, job timeout-minutes, runner version pinning, Docker layer caching, and trigger path filters.
 
 ---
 

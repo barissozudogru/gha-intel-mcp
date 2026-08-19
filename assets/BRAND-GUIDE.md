@@ -1,4 +1,4 @@
-# Intel Suite -- Visual Identity Guide
+# Intel Suite visual identity
 
 Reference for maintaining visual consistency across gha-intel-mcp, test-intel-mcp, and release-intel-mcp.
 
@@ -15,7 +15,7 @@ Reference for maintaining visual consistency across gha-intel-mcp, test-intel-mc
 | Base Light | `#F8FAFC` | Light backgrounds, text on dark |
 | Neutral | `#64748B` | Muted text, secondary elements |
 
-### gha-intel-mcp -- Amber Signal
+### gha-intel-mcp (amber)
 
 | Role | Hex | Tailwind Equivalent |
 |------|-----|---------------------|
@@ -29,7 +29,7 @@ Reference for maintaining visual consistency across gha-intel-mcp, test-intel-mc
 | Background gradient | `#1C1917` to `#44403C` | stone-900 to stone-700 |
 | Shields.io badge | `F59E0B` | |
 
-### test-intel-mcp -- Cyan Precision
+### test-intel-mcp (cyan)
 
 | Role | Hex | Tailwind Equivalent |
 |------|-----|---------------------|
@@ -43,7 +43,7 @@ Reference for maintaining visual consistency across gha-intel-mcp, test-intel-mc
 | Background gradient | `#0C1222` to `#164E63` | custom to cyan-800 |
 | Shields.io badge | `06B6D4` | |
 
-### release-intel-mcp -- Violet Prestige
+### release-intel-mcp (violet)
 
 | Role | Hex | Tailwind Equivalent |
 |------|-----|---------------------|

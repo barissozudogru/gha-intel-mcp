@@ -504,7 +504,7 @@ server.registerTool(
         findings.push({
           severity: 'good',
           category: 'parallelism',
-          message: 'Matrix strategy is in use — builds run in parallel across matrix dimensions.',
+          message: 'Matrix strategy is in use (builds run in parallel across matrix dimensions).',
         });
 
         const hasFailFast = hasPattern(/fail-fast:\s*false/);
@@ -582,7 +582,7 @@ server.registerTool(
         findings.push({
           severity: 'good',
           category: 'artifacts',
-          message: `${artifactUploadCount} artifact upload(s) and ${artifactDownloadCount} download(s) found — artifacts are being used to pass data between jobs.`,
+          message: `${artifactUploadCount} artifact upload(s) and ${artifactDownloadCount} download(s) found (artifacts are being used to pass data between jobs).`,
         });
       }
 

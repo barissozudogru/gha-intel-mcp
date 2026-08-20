@@ -3,70 +3,45 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
-
-concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: false
+      - "v*"
 
 jobs:
-  release:
-    name: Build and publish
+  publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     permissions:
-      contents: write
+      contents: read
       packages: write
+      id-token: write
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@barissozudogru'
+          node-version: "22"
 
       - name: Install dependencies
         run: npm ci
 
+      - name: Run tests
+        run: npm test
+
       - name: Build
         run: npm run build
 
+      # The registry is passed explicitly on each publish. The committed .npmrc
+      # pins this scope to npmjs, and a scope registry overrides both the
+      # --registry flag's default and publishConfig, so an ambient setup-node
+      # registry-url is not enough to steer the publish.
+      - name: Publish to npm
+        if: ${{ env.NPM_TOKEN != '' }}
+        run: npm publish --@barissozudogru:registry=https://registry.npmjs.org
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Publish to GitHub Packages
-        run: npm publish
+        run: npm publish --@barissozudogru:registry=https://npm.pkg.github.com
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          generate_release_notes: true

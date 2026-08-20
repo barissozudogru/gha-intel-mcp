@@ -1,6 +1,7 @@
 {
   "name": "@barissozudogru/gha-intel-mcp",
-  "version": "0.4.2",
+  "version": "0.4.3",
+  "mcpName": "io.github.barissozudogru/gha-intel",
   "description": "GitHub Actions intelligence MCP server - workflow timing analysis, configuration audit, and billing insights",
   "type": "module",
   "main": "dist/index.js",

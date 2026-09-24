@@ -222,7 +222,7 @@ const repoSchema = z
 // MCP Server
 // ---------------------------------------------------------------------------
 
-const server = new McpServer({ name: 'gha-intel-mcp', version: VERSION });
+export function registerTools(server: McpServer): void {
 
 // ---------------------------------------------------------------------------
 // Tool 1: list_workflow_performance
@@ -1001,6 +1001,35 @@ server.registerTool(
     }
   }
 );
+}
+
+export function createMcpServer(): McpServer {
+  const server = new McpServer({ name: 'gha-intel-mcp', version: VERSION });
+  registerTools(server);
+  return server;
+}
+
+export function createHttpApp(): express.Express {
+  const app = express();
+  app.use(express.json());
+
+  app.post('/mcp', async (req, res) => {
+    const server = createMcpServer();
+    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
+    res.on('close', () => {
+      transport.close();
+      server.close();
+    });
+    await server.connect(transport);
+    await transport.handleRequest(req, res, req.body);
+  });
+
+  app.get('/health', (_req, res) => {
+    res.json({ status: 'ok', server: 'gha-intel-mcp', version: VERSION });
+  });
+
+  return app;
+}
 
 // ---------------------------------------------------------------------------
 // Start server
@@ -1010,25 +1039,13 @@ async function main() {
   const useHttp = process.argv.includes('--http') || (process.env.TRANSPORT ?? '').toLowerCase() === 'http';
 
   if (useHttp) {
-    const app = express();
-    app.use(express.json());
+    const app = createHttpApp();
     const port = parseInt(process.env.PORT || '3000', 10);
-
-    app.post('/mcp', async (req, res) => {
-      const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
-      res.on('close', () => { transport.close(); });
-      await server.connect(transport);
-      await transport.handleRequest(req, res, req.body);
-    });
-
-    app.get('/health', (_req, res) => {
-      res.json({ status: 'ok', server: 'gha-intel-mcp', version: VERSION });
-    });
-
     app.listen(port, () => {
       process.stderr.write(`gha-intel-mcp v${VERSION} listening on http://0.0.0.0:${port}/mcp\n`);
     });
   } else {
+    const server = createMcpServer();
     const transport = new StdioServerTransport();
     await server.connect(transport);
     process.stderr.write(`gha-intel-mcp v${VERSION} running on stdio\n`);

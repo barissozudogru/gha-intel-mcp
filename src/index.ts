@@ -145,6 +145,22 @@ interface CacheUsageResponse {
   active_caches_count: number;
 }
 
+async function fetchRunJobs(owner: string, repo: string, runId: number): Promise<Job[]> {
+  const jobs: Job[] = [];
+  let page = 1;
+  while (true) {
+    const data = await githubFetch<JobsResponse>(
+      `/repos/${owner}/${repo}/actions/runs/${runId}/jobs?per_page=100&page=${page}`
+    );
+    jobs.push(...data.jobs);
+    if (jobs.length >= data.total_count || data.jobs.length < 100) {
+      break;
+    }
+    page++;
+  }
+  return jobs;
+}
+
 // ---------------------------------------------------------------------------
 // Utility: duration helpers
 // ---------------------------------------------------------------------------
@@ -281,17 +297,15 @@ server.registerTool(
       }> = [];
 
       const jobsPerRun = await parallelMap(runs, (run) =>
-        githubFetch<JobsResponse>(
-          `/repos/${owner}/${repo}/actions/runs/${run.id}/jobs?per_page=100`
-        )
+        fetchRunJobs(owner, repo, run.id)
       );
 
       for (let i = 0; i < runs.length; i++) {
         const run = runs[i];
-        const jobsData = jobsPerRun[i];
-        const { wall_clock_seconds, billable_seconds } = computeRunTiming(jobsData.jobs);
+        const jobs = jobsPerRun[i];
+        const { wall_clock_seconds, billable_seconds } = computeRunTiming(jobs);
 
-        for (const job of jobsData.jobs) {
+        for (const job of jobs) {
           // Jobs that were skipped never executed and carry no timestamps.
           // durationSeconds would return 0 for them, injecting bogus samples
           // that drag down the average, force min to 0s, and overcount runs.
@@ -940,15 +954,13 @@ server.registerTool(
           const recentRuns = runsData.workflow_runs.slice(0, 100);
 
           const jobsPerRun = await parallelMap(recentRuns, (run) =>
-            githubFetch<JobsResponse>(
-              `/repos/${owner}/${repo}/actions/runs/${run.id}/jobs?per_page=100`
-            )
+            fetchRunJobs(owner, repo, run.id)
           );
 
           let totalWallClockSeconds = 0;
           let totalBillableSeconds = 0;
-          for (const jobsData of jobsPerRun) {
-            const { wall_clock_seconds, billable_seconds } = computeRunTiming(jobsData.jobs);
+          for (const jobs of jobsPerRun) {
+            const { wall_clock_seconds, billable_seconds } = computeRunTiming(jobs);
             totalWallClockSeconds += wall_clock_seconds;
             totalBillableSeconds += billable_seconds;
           }

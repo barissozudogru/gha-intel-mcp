@@ -119,3 +119,252 @@ test('HTTP server handles concurrent MCP requests without crashing', async () =>
   }
 });
 
+test('list_workflow_performance paginates jobs when run has more than 100 jobs', async () => {
+  const app = createHttpApp();
+  const server = app.listen(0);
+  const { port } = server.address() as { port: number };
+
+  const requestedUrls: string[] = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const urlStr = String(input);
+    requestedUrls.push(urlStr);
+    if (urlStr.includes('/actions/workflows/ci.yml/runs')) {
+      return new Response(
+        JSON.stringify({
+          total_count: 1,
+          workflow_runs: [
+            {
+              id: 101,
+              name: 'CI',
+              status: 'completed',
+              conclusion: 'success',
+              created_at: '2026-01-01T00:00:00Z',
+              updated_at: '2026-01-01T00:02:00Z',
+              run_started_at: '2026-01-01T00:00:00Z',
+              run_number: 42,
+              html_url: 'https://github.com/test-owner/test-repo/actions/runs/101',
+            },
+          ],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    if (urlStr.includes('/actions/runs/101/jobs')) {
+      const url = new URL(urlStr);
+      const page = parseInt(url.searchParams.get('page') || '1', 10);
+      if (page === 1) {
+        const jobs = Array.from({ length: 100 }, (_, i) => ({
+          id: i + 1,
+          name: `job-${i + 1}`,
+          status: 'completed',
+          conclusion: 'success',
+          started_at: '2026-01-01T00:00:00Z',
+          completed_at: '2026-01-01T00:01:00Z',
+          steps: [],
+        }));
+        return new Response(JSON.stringify({ total_count: 105, jobs }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      if (page === 2) {
+        const jobs = Array.from({ length: 5 }, (_, i) => ({
+          id: 101 + i,
+          name: `job-${101 + i}`,
+          status: 'completed',
+          conclusion: 'success',
+          started_at: '2026-01-01T00:00:00Z',
+          completed_at: '2026-01-01T00:01:00Z',
+          steps: [],
+        }));
+        return new Response(JSON.stringify({ total_count: 105, jobs }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({ total_count: 105, jobs: [] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    return originalFetch(input, init);
+  }) as typeof fetch;
+
+  const originalToken = process.env.GITHUB_TOKEN;
+  process.env.GITHUB_TOKEN = 'test-token';
+
+  try {
+    const res = await fetch(`http://localhost:${port}/mcp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json, text/event-stream',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: {
+          name: 'list_workflow_performance',
+          arguments: {
+            owner: 'test-owner',
+            repo: 'test-repo',
+            workflow_id: 'ci.yml',
+            count: 1,
+          },
+        },
+      }),
+    });
+
+    assert.equal(res.status, 200);
+    const data = await res.json();
+    assert.equal(data.error, undefined);
+    const text = data.result.content[0].text;
+    assert.match(text, /job-105/);
+    assert.ok(requestedUrls.some((u) => u.includes('page=2')));
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalToken === undefined) {
+      delete process.env.GITHUB_TOKEN;
+    } else {
+      process.env.GITHUB_TOKEN = originalToken;
+    }
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+});
+
+test('get_billing_usage paginates jobs when recent run has more than 100 jobs', async () => {
+  const app = createHttpApp();
+  const server = app.listen(0);
+  const { port } = server.address() as { port: number };
+
+  const requestedUrls: string[] = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const urlStr = String(input);
+    requestedUrls.push(urlStr);
+    if (urlStr.includes('/settings/billing/actions')) {
+      return new Response(
+        JSON.stringify({
+          total_minutes_used: 0,
+          total_paid_minutes_used: 0,
+          included_minutes: 2000,
+          minutes_used_breakdown: {},
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    if (urlStr.includes('/actions/cache/usage')) {
+      return new Response(
+        JSON.stringify({
+          full_name: 'test-owner/test-repo',
+          active_caches_size_in_bytes: 0,
+          active_caches_count: 0,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    if (urlStr.includes('/actions/runs?per_page=100&status=completed')) {
+      return new Response(
+        JSON.stringify({
+          total_count: 1,
+          workflow_runs: [
+            {
+              id: 202,
+              name: 'Build',
+              status: 'completed',
+              conclusion: 'success',
+              created_at: '2026-01-01T00:00:00Z',
+              updated_at: '2026-01-01T00:02:00Z',
+              run_started_at: '2026-01-01T00:00:00Z',
+              run_number: 1,
+              html_url: 'https://github.com/test-owner/test-repo/actions/runs/202',
+            },
+          ],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    if (urlStr.includes('/actions/runs/202/jobs')) {
+      const url = new URL(urlStr);
+      const page = parseInt(url.searchParams.get('page') || '1', 10);
+      if (page === 1) {
+        const jobs = Array.from({ length: 100 }, (_, i) => ({
+          id: i + 1,
+          name: `job-${i + 1}`,
+          status: 'completed',
+          conclusion: 'success',
+          started_at: '2026-01-01T00:00:00Z',
+          completed_at: '2026-01-01T00:01:00Z',
+          steps: [],
+        }));
+        return new Response(JSON.stringify({ total_count: 105, jobs }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      if (page === 2) {
+        const jobs = Array.from({ length: 5 }, (_, i) => ({
+          id: 101 + i,
+          name: `job-${101 + i}`,
+          status: 'completed',
+          conclusion: 'success',
+          started_at: '2026-01-01T00:00:00Z',
+          completed_at: '2026-01-01T00:01:00Z',
+          steps: [],
+        }));
+        return new Response(JSON.stringify({ total_count: 105, jobs }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({ total_count: 105, jobs: [] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    return originalFetch(input, init);
+  }) as typeof fetch;
+
+  const originalToken = process.env.GITHUB_TOKEN;
+  process.env.GITHUB_TOKEN = 'test-token';
+
+  try {
+    const res = await fetch(`http://localhost:${port}/mcp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json, text/event-stream',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: {
+          name: 'get_billing_usage',
+          arguments: {
+            owner: 'test-owner',
+            repo: 'test-repo',
+          },
+        },
+      }),
+    });
+
+    assert.equal(res.status, 200);
+    const data = await res.json();
+    assert.equal(data.error, undefined);
+    const text = data.result.content[0].text;
+    assert.match(text, /Estimated cost \(Ubuntu\):\s+\$0\.84/);
+    assert.ok(requestedUrls.some((u) => u.includes('page=2')));
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalToken === undefined) {
+      delete process.env.GITHUB_TOKEN;
+    } else {
+      process.env.GITHUB_TOKEN = originalToken;
+    }
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+});
+

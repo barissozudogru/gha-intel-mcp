@@ -52,6 +52,31 @@ test('computeRunTiming calculates parallel wall clock and billable seconds', () 
   assert.equal(timing.billable_seconds, 240);
 });
 
+test('computeRunTiming rounds each short job up to a billable minute', () => {
+  const jobs = [
+    {
+      id: 1,
+      name: 'build',
+      status: 'completed',
+      conclusion: 'success',
+      started_at: '2026-01-01T00:00:00Z',
+      completed_at: '2026-01-01T00:00:10Z',
+      steps: [],
+    },
+    {
+      id: 2,
+      name: 'test',
+      status: 'completed',
+      conclusion: 'success',
+      started_at: '2026-01-01T00:00:00Z',
+      completed_at: '2026-01-01T00:00:20Z',
+      steps: [],
+    },
+  ];
+
+  assert.equal(computeRunTiming(jobs).billable_seconds, 120);
+});
+
 test('HTTP server handles concurrent MCP requests without crashing', async () => {
   const app = createHttpApp();
   const server = app.listen(0);

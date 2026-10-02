@@ -207,7 +207,8 @@ export function computeRunTiming(jobs: Job[]): { wall_clock_seconds: number; bil
       if (!Number.isNaN(start) && !Number.isNaN(end)) {
         if (earliestStart === null || start < earliestStart) earliestStart = start;
         if (latestEnd === null || end > latestEnd) latestEnd = end;
-        billable += Math.max(0, (end - start) / 1000);
+        const durationSeconds = Math.max(0, (end - start) / 1000);
+        billable += Math.ceil(durationSeconds / 60) * 60;
       }
     }
   }

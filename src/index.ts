@@ -486,7 +486,16 @@ server.registerTool(
       const hasActionsCache = hasPattern(/actions\/cache/);
       const hasSetupNodeCache = hasPattern(/cache:\s*['"]?npm|cache:\s*['"]?yarn|cache:\s*['"]?pnpm/);
       const hasSetupPythonCache = hasPattern(/cache:\s*['"]?pip/);
-      const hasCaching = hasActionsCache || hasSetupNodeCache || hasSetupPythonCache;
+      const hasSetupJavaCache = hasPattern(/cache:\s*['"]?maven|cache:\s*['"]?gradle|cache:\s*['"]?sbt/);
+      const hasRustCache = hasPattern(/Swatinem\/rust-cache/i);
+      const hasSetupGo = hasPattern(/actions\/setup-go/i);
+      const hasCaching =
+        hasActionsCache ||
+        hasSetupNodeCache ||
+        hasSetupPythonCache ||
+        hasSetupJavaCache ||
+        hasRustCache ||
+        hasSetupGo;
 
       const hasNpmInstall = hasPattern(/npm\s+(?:ci|install)/);
       const hasYarnInstall =

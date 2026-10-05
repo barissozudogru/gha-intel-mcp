@@ -393,3 +393,150 @@ test('get_billing_usage paginates jobs when recent run has more than 100 jobs', 
   }
 });
 
+test('analyze_workflow_config recognizes Java, Rust, and Go caching configurations', async () => {
+  const app = createHttpApp();
+  const server = app.listen(0);
+  const { port } = server.address() as { port: number };
+
+  const analyze = async (workflowContent: string) => {
+    const res = await fetch(`http://localhost:${port}/mcp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json, text/event-stream',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: {
+          name: 'analyze_workflow_config',
+          arguments: {
+            workflow_content: workflowContent,
+          },
+        },
+      }),
+    });
+    const data = await res.json();
+    return data.result.content[0].text as string;
+  };
+
+  try {
+    const javaWorkflow = `
+name: Java CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - run: mvn install
+`;
+    const javaResult = await analyze(javaWorkflow);
+    assert.match(javaResult, /\[OK\] \[caching\] Dependency caching is configured\./);
+    assert.doesNotMatch(javaResult, /Dependency installation detected but no caching is configured\./);
+
+    const rustWorkflow = `
+name: Rust CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release
+`;
+    const rustResult = await analyze(rustWorkflow);
+    assert.match(rustResult, /\[OK\] \[caching\] Dependency caching is configured\./);
+    assert.doesNotMatch(rustResult, /Dependency installation detected but no caching is configured\./);
+
+    const gradleWorkflow = `
+name: Gradle CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+`;
+    const gradleResult = await analyze(gradleWorkflow);
+    assert.match(gradleResult, /\[OK\] \[caching\] Dependency caching is configured\./);
+
+    const sbtWorkflow = `
+name: SBT CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'sbt'
+`;
+    const sbtResult = await analyze(sbtWorkflow);
+    assert.match(sbtResult, /\[OK\] \[caching\] Dependency caching is configured\./);
+
+    const uncachedJavaWorkflow = `
+name: Uncached Java CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - run: mvn install
+`;
+    const uncachedJavaResult = await analyze(uncachedJavaWorkflow);
+    assert.match(uncachedJavaResult, /\[WARN\] \[caching\] Dependency installation detected but no caching is configured\./);
+
+    const uncachedRustWorkflow = `
+name: Uncached Rust CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo build --release
+`;
+    const uncachedRustResult = await analyze(uncachedRustWorkflow);
+    assert.match(uncachedRustResult, /\[WARN\] \[caching\] Dependency installation detected but no caching is configured\./);
+
+    const goWorkflow = `
+name: Go CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+`;
+    const goResult = await analyze(goWorkflow);
+    assert.match(goResult, /\[OK\] \[caching\] Dependency caching is configured\./);
+  } finally {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+});
+
+

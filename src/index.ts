@@ -563,7 +563,7 @@ server.registerTool(
       }
 
       // --- Concurrency ---
-      const hasConcurrency = hasPattern(/^concurrency:/m);
+      const hasConcurrency = hasPattern(/^\s*concurrency:/m);
       if (!hasConcurrency) {
         findings.push({
           severity: 'warning',

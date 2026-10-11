@@ -539,4 +539,54 @@ jobs:
   }
 });
 
+test('analyze_workflow_config recognizes job-level concurrency configurations', async () => {
+  const app = createHttpApp();
+  const server = app.listen(0);
+  const { port } = server.address() as { port: number };
+
+  const analyze = async (workflowContent: string) => {
+    const res = await fetch(`http://localhost:${port}/mcp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json, text/event-stream',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: {
+          name: 'analyze_workflow_config',
+          arguments: {
+            workflow_content: workflowContent,
+          },
+        },
+      }),
+    });
+    const data = await res.json();
+    return data.result.content[0].text as string;
+  };
+
+  try {
+    const jobConcurrencyWorkflow = `
+name: CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ci-\${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+`;
+    const result = await analyze(jobConcurrencyWorkflow);
+    assert.match(result, /\[OK\] \[concurrency\] Concurrency with cancel-in-progress: true is configured\./);
+    assert.doesNotMatch(result, /No concurrency group is configured\./);
+  } finally {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+});
+
+
 

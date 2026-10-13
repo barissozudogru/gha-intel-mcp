@@ -679,8 +679,13 @@ server.registerTool(
       }
 
       // --- Workflow triggers ---
-      const hasPushTrigger = hasPattern(/^on:\s*\n\s+push:/m) || hasPattern(/^on:\s+push/m);
-      const hasPullRequestTrigger = hasPattern(/pull_request:/);
+      const hasPushTrigger =
+        hasPattern(/^on:\s*(?:\n\s+push:|\s+(?:\[[^\]]*\bpush\b[^\]]*\]|['"]?push['"]?))/m) ||
+        hasPattern(/^on:\s*\n(?:\s+-[^\n]*\n)*\s+-\s*['"]?push['"]?\b/m);
+      const hasPullRequestTrigger =
+        hasPattern(/pull_request:/) ||
+        hasPattern(/^on:\s*(?:\s+(?:\[[^\]]*\bpull_request\b[^\]]*\]|['"]?pull_request['"]?))/m) ||
+        hasPattern(/^on:\s*\n(?:\s+-[^\n]*\n)*\s+-\s*['"]?pull_request['"]?\b/m);
       const hasPathFilter = hasPattern(/paths:/);
       const hasPathIgnore = hasPattern(/paths-ignore:/);
 

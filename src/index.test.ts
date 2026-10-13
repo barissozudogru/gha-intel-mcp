@@ -588,5 +588,102 @@ jobs:
   }
 });
 
+test('analyze_workflow_config detects push trigger defined in arrays and scalar formats', async () => {
+  const app = createHttpApp();
+  const server = app.listen(0);
+  const { port } = server.address() as { port: number };
+
+  const analyze = async (workflowContent: string) => {
+    const res = await fetch(`http://localhost:${port}/mcp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json, text/event-stream',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: {
+          name: 'analyze_workflow_config',
+          arguments: {
+            workflow_content: workflowContent,
+          },
+        },
+      }),
+    });
+    const data = await res.json();
+    return data.result.content[0].text as string;
+  };
+
+  try {
+    const arrayWorkflow = `
+name: CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+`;
+    const arrayResult = await analyze(arrayWorkflow);
+    assert.match(arrayResult, /Push trigger has no paths filter\./);
+    assert.match(arrayResult, /Workflow triggers on both push and pull_request events\./);
+
+    const singlePushArrayWorkflow = `
+name: CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+`;
+    const singlePushArrayResult = await analyze(singlePushArrayWorkflow);
+    assert.match(singlePushArrayResult, /Push trigger has no paths filter\./);
+
+    const multilineArrayWorkflow = `
+name: CI
+on:
+  - push
+  - pull_request
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+`;
+    const scalarWorkflow = `
+name: CI
+on: 'push'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+`;
+    const scalarResult = await analyze(scalarWorkflow);
+    assert.match(scalarResult, /Push trigger has no paths filter\./);
+
+    const filteredWorkflow = `
+name: CI
+on:
+  push:
+    paths:
+      - 'src/**'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+`;
+    const filteredResult = await analyze(filteredWorkflow);
+    assert.doesNotMatch(filteredResult, /Push trigger has no paths filter\./);
+  } finally {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+});
+
+
 
 

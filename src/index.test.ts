@@ -14,6 +14,14 @@ test('fmtSeconds formats minute durations and prevents 60s rollover overflow', (
   assert.equal(fmtSeconds(125), '2m 05s');
 });
 
+test('fmtSeconds carries rounded sub-minute values into minute format', () => {
+  assert.equal(fmtSeconds(59.96), '1m 00s');
+  assert.equal(fmtSeconds(59.95), '1m 00s');
+  assert.equal(fmtSeconds(59.94), '59.9s');
+  assert.equal(fmtSeconds(1.15), '1.1s');
+  assert.equal(fmtSeconds(59.15), '59.1s');
+});
+
 test('durationSeconds handles valid, null, and invalid date inputs', () => {
   assert.equal(durationSeconds('2026-01-01T00:00:00Z', '2026-01-01T00:01:30Z'), 90);
   assert.equal(durationSeconds('invalid', '2026-01-01T00:01:30Z'), 0);

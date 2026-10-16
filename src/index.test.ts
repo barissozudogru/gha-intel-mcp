@@ -33,6 +33,10 @@ test('percentile and avg compute expected summary statistics', () => {
   assert.equal(percentile([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 95), 10);
 });
 
+test('percentile returns zero for a non-finite percentile', () => {
+  assert.equal(percentile([1, 2, 3], Number.NaN), 0);
+});
+
 test('computeRunTiming calculates parallel wall clock and billable seconds', () => {
   const jobs = [
     {

@@ -185,7 +185,8 @@ export function avg(values: number[]): number {
 }
 
 export function fmtSeconds(s: number): string {
-  if (s < 60) return `${s.toFixed(1)}s`;
+  const seconds = s.toFixed(1);
+  if (Number(seconds) < 60) return `${seconds}s`;
   const totalSec = Math.round(s);
   const m = Math.floor(totalSec / 60);
   const rem = String(totalSec % 60).padStart(2, '0');

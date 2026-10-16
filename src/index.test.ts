@@ -85,6 +85,34 @@ test('computeRunTiming rounds each short job up to a billable minute', () => {
   assert.equal(computeRunTiming(jobs).billable_seconds, 120);
 });
 
+test('computeRunTiming ignores jobs whose completion precedes their start', () => {
+  const jobs = [
+    {
+      id: 1,
+      name: 'valid',
+      status: 'completed',
+      conclusion: 'success',
+      started_at: '2026-01-01T00:10:00Z',
+      completed_at: '2026-01-01T00:11:00Z',
+      steps: [],
+    },
+    {
+      id: 2,
+      name: 'malformed',
+      status: 'completed',
+      conclusion: 'failure',
+      started_at: '2026-01-01T00:00:00Z',
+      completed_at: '2025-12-31T23:59:00Z',
+      steps: [],
+    },
+  ];
+
+  assert.deepEqual(computeRunTiming(jobs), {
+    wall_clock_seconds: 60,
+    billable_seconds: 60,
+  });
+});
+
 test('HTTP server handles concurrent MCP requests without crashing', async () => {
   const app = createHttpApp();
   const server = app.listen(0);

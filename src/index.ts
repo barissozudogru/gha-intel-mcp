@@ -205,7 +205,7 @@ export function computeRunTiming(jobs: Job[]): { wall_clock_seconds: number; bil
     if (job.started_at && job.completed_at) {
       const start = new Date(job.started_at).getTime();
       const end = new Date(job.completed_at).getTime();
-      if (!Number.isNaN(start) && !Number.isNaN(end)) {
+      if (!Number.isNaN(start) && !Number.isNaN(end) && end >= start) {
         if (earliestStart === null || start < earliestStart) earliestStart = start;
         if (latestEnd === null || end > latestEnd) latestEnd = end;
         const durationSeconds = Math.max(0, (end - start) / 1000);

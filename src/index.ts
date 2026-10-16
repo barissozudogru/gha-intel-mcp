@@ -174,7 +174,7 @@ export function durationSeconds(start: string | null, end: string | null): numbe
 }
 
 export function percentile(sorted: number[], p: number): number {
-  if (sorted.length === 0) return 0;
+  if (sorted.length === 0 || !Number.isFinite(p)) return 0;
   const idx = Math.ceil((p / 100) * sorted.length) - 1;
   return sorted[Math.max(0, Math.min(idx, sorted.length - 1))];
 }

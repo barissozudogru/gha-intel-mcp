@@ -337,6 +337,9 @@ server.registerTool(
           if (!stepDurations[job.name]) stepDurations[job.name] = {};
           for (const step of job.steps) {
             if (!step.started_at || !step.completed_at) continue;
+            const stepStart = new Date(step.started_at).getTime();
+            const stepEnd = new Date(step.completed_at).getTime();
+            if (Number.isNaN(stepStart) || Number.isNaN(stepEnd) || stepEnd < stepStart) continue;
             const sDur = durationSeconds(step.started_at, step.completed_at);
             if (!stepDurations[job.name][step.name]) stepDurations[job.name][step.name] = [];
             stepDurations[job.name][step.name].push(sDur);

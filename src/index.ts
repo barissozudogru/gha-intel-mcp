@@ -325,6 +325,10 @@ server.registerTool(
           // that drag down the average, force min to 0s, and overcount runs.
           if (!job.started_at || !job.completed_at) continue;
 
+          const jobStart = new Date(job.started_at).getTime();
+          const jobEnd = new Date(job.completed_at).getTime();
+          if (Number.isNaN(jobStart) || Number.isNaN(jobEnd) || jobEnd < jobStart) continue;
+
           const dur = durationSeconds(job.started_at, job.completed_at);
 
           if (!jobDurations[job.name]) jobDurations[job.name] = [];

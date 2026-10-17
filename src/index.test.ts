@@ -30,6 +30,10 @@ test('fmtSeconds renders non-finite durations as zero', () => {
   assert.equal(fmtSeconds(Number.NEGATIVE_INFINITY), '0.0s');
 });
 
+test('fmtSeconds clamps negative durations to zero', () => {
+  assert.equal(fmtSeconds(-0.5), '0.0s');
+});
+
 test('durationSeconds handles valid, null, and invalid date inputs', () => {
   assert.equal(durationSeconds('2026-01-01T00:00:00Z', '2026-01-01T00:01:30Z'), 90);
   assert.equal(durationSeconds('invalid', '2026-01-01T00:01:30Z'), 0);

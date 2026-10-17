@@ -186,7 +186,7 @@ export function avg(values: number[]): number {
 }
 
 export function fmtSeconds(s: number): string {
-  if (!Number.isFinite(s)) return '0.0s';
+  if (!Number.isFinite(s) || s < 0) return '0.0s';
   const seconds = s.toFixed(1);
   if (Number(seconds) < 60) return `${seconds}s`;
   const totalSec = Math.round(s);

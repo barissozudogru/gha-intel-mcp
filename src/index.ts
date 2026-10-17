@@ -674,9 +674,11 @@ server.registerTool(
       }
 
       // --- Runner type ---
-      const hasUbuntuLatest = hasPattern(/runs-on:\s*ubuntu-latest/);
-      const hasUbuntuVersioned = hasPattern(/runs-on:\s*ubuntu-2\d/);
-      if (hasUbuntuLatest && !hasUbuntuVersioned) {
+      const ubuntuRunnerLabels = [...content.matchAll(/runs-on:\s*['"]?(ubuntu-(?:latest|2\d(?:\.\d+)?))['"]?/g)].map(
+        (match) => match[1],
+      );
+      const hasUbuntuLatest = ubuntuRunnerLabels.includes('ubuntu-latest');
+      if (hasUbuntuLatest) {
         findings.push({
           severity: 'info',
           category: 'runner',

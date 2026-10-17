@@ -484,7 +484,9 @@ server.registerTool(
       const content = workflow_content;
 
       // Validate that the input looks like a GHA workflow
-      if (!/\bon:/i.test(content) && !/\bjobs:/i.test(content)) {
+      const hasWorkflowKey = (key: string) =>
+        new RegExp(`(?:^|\\n)\\s*["']?${key}["']?\\s*:`, 'i').test(content);
+      if (!hasWorkflowKey('on') && !hasWorkflowKey('jobs')) {
         return {
           content: [
             {

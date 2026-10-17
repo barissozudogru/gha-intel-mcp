@@ -180,8 +180,9 @@ export function percentile(sorted: number[], p: number): number {
 }
 
 export function avg(values: number[]): number {
-  if (values.length === 0) return 0;
-  return values.reduce((a, b) => a + b, 0) / values.length;
+  const finiteValues = values.filter(Number.isFinite);
+  if (finiteValues.length === 0) return 0;
+  return finiteValues.reduce((a, b) => a + b, 0) / finiteValues.length;
 }
 
 export function fmtSeconds(s: number): string {

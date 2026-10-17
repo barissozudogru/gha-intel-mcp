@@ -45,6 +45,11 @@ test('percentile returns zero for a non-finite percentile', () => {
   assert.equal(percentile([1, 2, 3], Number.NaN), 0);
 });
 
+test('avg ignores non-finite samples', () => {
+  assert.equal(avg([1, Number.NaN, 3, Number.POSITIVE_INFINITY]), 2);
+  assert.equal(avg([Number.NaN, Number.NEGATIVE_INFINITY]), 0);
+});
+
 test('computeRunTiming calculates parallel wall clock and billable seconds', () => {
   const jobs = [
     {

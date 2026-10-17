@@ -230,12 +230,23 @@ export function computeRunTiming(jobs: Job[]): { wall_clock_seconds: number; bil
 const ownerSchema = z
   .string()
   .regex(/^[a-zA-Z0-9._-]+$/, 'owner must contain only alphanumeric characters, dots, hyphens, or underscores')
+  .refine((value) => value !== '.' && value !== '..', 'owner must not be a path traversal segment')
   .describe('GitHub repository owner (user or org)');
 
 const repoSchema = z
   .string()
   .regex(/^[a-zA-Z0-9._-]+$/, 'repo must contain only alphanumeric characters, dots, hyphens, or underscores')
+  .refine((value) => value !== '.' && value !== '..', 'repo must not be a path traversal segment')
   .describe('GitHub repository name');
+
+export const billingUsageInputSchema = z.object({
+  owner: ownerSchema.describe('GitHub username or organisation name'),
+  repo: repoSchema
+    .optional()
+    .describe(
+      'Optional repository name to scope usage. When provided, returns repo-level cache stats and recent run timing.'
+    ),
+});
 
 // ---------------------------------------------------------------------------
 // MCP Server
@@ -801,15 +812,7 @@ server.registerTool(
     description:
       'Retrieve GitHub Actions billing and cache usage statistics for an owner ' +
       '(user or org), optionally scoped to a specific repository.',
-    inputSchema: z.object({
-      owner: z.string().describe('GitHub username or organisation name'),
-      repo: z
-        .string()
-        .optional()
-        .describe(
-          'Optional repository name to scope usage. When provided, returns repo-level cache stats and recent run timing.'
-        ),
-    }),
+    inputSchema: billingUsageInputSchema,
   },
   async ({ owner, repo }) => {
     try {

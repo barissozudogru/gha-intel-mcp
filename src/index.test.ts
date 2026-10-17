@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { fmtSeconds, durationSeconds, percentile, avg, computeRunTiming, createHttpApp } from './index.js';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import { fmtSeconds, durationSeconds, percentile, avg, computeRunTiming, createHttpApp, createMcpServer } from './index.js';
 
 test('fmtSeconds formats sub-minute durations in seconds', () => {
   assert.equal(fmtSeconds(0), '0.0s');
@@ -121,6 +123,23 @@ test('computeRunTiming ignores jobs whose completion precedes their start', () =
     wall_clock_seconds: 60,
     billable_seconds: 60,
   });
+});
+
+test('get_billing_usage rejects path traversal identifiers through the registered tool', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    for (const arguments_ of [{ owner: '..' }, { owner: 'org', repo: '..' }]) {
+      const result = await client.callTool({ name: 'get_billing_usage', arguments: arguments_ });
+      assert.equal(result.isError, true);
+    }
+  } finally {
+    await client.close();
+    await server.close();
+  }
 });
 
 test('HTTP server handles concurrent MCP requests without crashing', async () => {

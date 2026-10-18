@@ -271,6 +271,7 @@ server.registerTool(
       repo: repoSchema,
       workflow_id: z
         .string()
+        .min(1, 'workflow_id must not be empty')
         .describe('Workflow file name (e.g. ci.yml) or numeric workflow ID'),
       count: z
         .number()

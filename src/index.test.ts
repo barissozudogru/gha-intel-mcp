@@ -337,6 +337,39 @@ test('get_billing_usage rejects path traversal identifiers through the registere
   }
 });
 
+test('list_workflow_performance rejects an empty workflow identifier', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const originalFetch = globalThis.fetch;
+  const originalToken = process.env.GITHUB_TOKEN;
+  let fetchCount = 0;
+  process.env.GITHUB_TOKEN = 'test-token';
+  globalThis.fetch = (async () => {
+    fetchCount++;
+    return new Response(JSON.stringify({ total_count: 0, workflow_runs: [] }), { status: 200 });
+  }) as typeof fetch;
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'list_workflow_performance',
+      arguments: { owner: 'test-owner', repo: 'test-repo', workflow_id: '' },
+    });
+    assert.equal(result.isError, true);
+    assert.equal(fetchCount, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalToken === undefined) {
+      delete process.env.GITHUB_TOKEN;
+    } else {
+      process.env.GITHUB_TOKEN = originalToken;
+    }
+    await client.close();
+    await server.close();
+  }
+});
+
 test('HTTP server handles concurrent MCP requests without crashing', async () => {
   const app = createHttpApp();
   const server = app.listen(0);

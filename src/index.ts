@@ -679,7 +679,7 @@ server.registerTool(
       }
 
       // --- Runner type ---
-      const ubuntuRunnerLabels = [...content.matchAll(/runs-on:\s*['"]?(ubuntu-(?:latest|2\d(?:\.\d+)?))['"]?/g)].map(
+      const ubuntuRunnerLabels = [...content.matchAll(/runs-on:\s*['"]?(ubuntu-(?:latest|2\d(?:\.\d+)?))(?![A-Za-z0-9_.-])['"]?/g)].map(
         (match) => match[1],
       );
       const hasUbuntuLatest = ubuntuRunnerLabels.includes('ubuntu-latest');

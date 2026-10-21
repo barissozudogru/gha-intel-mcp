@@ -952,6 +952,56 @@ jobs:
   }
 });
 
+test('analyze_workflow_config recognizes npm shell delimiters without matching subcommands', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    for (const command of ['npm install; echo done', 'npm install&&npm test', 'npm ci|npm test']) {
+      const result = await client.callTool({
+        name: 'analyze_workflow_config',
+        arguments: {
+          workflow_content: `
+name: CI
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ${command}
+`,
+        },
+      });
+      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      assert.match(text, /Dependency installation detected but no caching is configured\./, command);
+      assert.match(text, /No matrix strategy detected\./, command);
+    }
+
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+name: CI
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm install-package
+`,
+      },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.doesNotMatch(text, /Dependency installation detected but no caching is configured\./);
+    assert.doesNotMatch(text, /No matrix strategy detected\./);
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
 test('analyze_workflow_config recognizes job-level concurrency configurations', async () => {
   const app = createHttpApp();
   const server = app.listen(0);

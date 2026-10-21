@@ -53,6 +53,10 @@ test('percentile ignores non-finite samples', () => {
   assert.equal(percentile([1, Number.NaN, 3], 50), 1);
 });
 
+test('percentile sorts unsorted samples before selecting a value', () => {
+  assert.equal(percentile([30, 10, 20], 50), 20);
+});
+
 test('avg ignores non-finite samples', () => {
   assert.equal(avg([1, Number.NaN, 3, Number.POSITIVE_INFINITY]), 2);
   assert.equal(avg([Number.NaN, Number.NEGATIVE_INFINITY]), 0);

@@ -891,7 +891,7 @@ server.registerTool(
         const breakdownLines: string[] = [];
 
         for (const [type, minutes] of Object.entries(breakdown)) {
-          if (typeof minutes !== 'number' || minutes === 0) continue;
+          if (typeof minutes !== 'number' || !Number.isFinite(minutes) || minutes <= 0) continue;
           const rate = costMultipliers[type] ?? 0.008;
           const cost = minutes * rate;
           estimatedCost += cost;

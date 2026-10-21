@@ -212,7 +212,7 @@ export function computeRunTiming(jobs: Job[]): { wall_clock_seconds: number; bil
         if (earliestStart === null || start < earliestStart) earliestStart = start;
         if (latestEnd === null || end > latestEnd) latestEnd = end;
         const durationSeconds = Math.max(0, (end - start) / 1000);
-        billable += Math.ceil(durationSeconds / 60) * 60;
+        billable += Math.max(1, Math.ceil(durationSeconds / 60)) * 60;
       }
     }
   }

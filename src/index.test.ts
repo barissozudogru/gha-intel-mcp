@@ -114,6 +114,25 @@ test('computeRunTiming rounds each short job up to a billable minute', () => {
   assert.equal(computeRunTiming(jobs).billable_seconds, 120);
 });
 
+test('computeRunTiming bills a zero-duration completed job for one minute', () => {
+  const jobs = [
+    {
+      id: 1,
+      name: 'instant',
+      status: 'completed',
+      conclusion: 'success',
+      started_at: '2026-01-01T00:00:00Z',
+      completed_at: '2026-01-01T00:00:00Z',
+      steps: [],
+    },
+  ];
+
+  assert.deepEqual(computeRunTiming(jobs), {
+    wall_clock_seconds: 0,
+    billable_seconds: 60,
+  });
+});
+
 test('computeRunTiming ignores jobs whose completion precedes their start', () => {
   const jobs = [
     {

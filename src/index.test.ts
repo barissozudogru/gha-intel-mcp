@@ -341,6 +341,52 @@ test('get_billing_usage rejects path traversal identifiers through the registere
   }
 });
 
+test('get_billing_usage ignores negative runner minutes when estimating cost', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const originalFetch = globalThis.fetch;
+  const originalToken = process.env.GITHUB_TOKEN;
+  process.env.GITHUB_TOKEN = 'test-token';
+
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes('/orgs/')) return new Response('not found', { status: 404 });
+    if (url.includes('/users/')) {
+      return new Response(
+        JSON.stringify({
+          total_minutes_used: 0,
+          total_paid_minutes_used: 0,
+          included_minutes: 100,
+          minutes_used_breakdown: { UBUNTU: -5 },
+        }),
+        { status: 200 }
+      );
+    }
+    throw new Error(`Unexpected request: ${url}`);
+  }) as typeof fetch;
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'get_billing_usage',
+      arguments: { owner: 'test-owner' },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.match(text, /Estimated cost:\s+\$0\.00/);
+    assert.doesNotMatch(text, /UBUNTU/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalToken === undefined) {
+      delete process.env.GITHUB_TOKEN;
+    } else {
+      process.env.GITHUB_TOKEN = originalToken;
+    }
+    await client.close();
+    await server.close();
+  }
+});
+
 test('list_workflow_performance rejects an empty workflow identifier', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });

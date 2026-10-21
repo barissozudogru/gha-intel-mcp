@@ -523,7 +523,7 @@ server.registerTool(
         hasRustCache ||
         hasSetupGo;
 
-      const hasNpmInstall = hasPattern(/npm\s+(?:ci|install)/);
+      const hasNpmInstall = hasPattern(/npm\s+(?:ci|install)(?=$|[\s;&|])/);
       const hasYarnInstall =
         hasPattern(/yarn\s+install\b/) || hasPattern(/\byarn\b(?!\s+\w)/);
       const hasPipInstall = hasPattern(/pip\s+install/);

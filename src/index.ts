@@ -900,9 +900,11 @@ server.registerTool(
           );
         }
 
-        const includedMins = billing.included_minutes ?? 0;
-        const usedMins = billing.total_minutes_used ?? 0;
-        const paidMins = billing.total_paid_minutes_used ?? 0;
+        const nonNegativeFinite = (value: number | undefined): number =>
+          typeof value === 'number' && Number.isFinite(value) ? Math.max(0, value) : 0;
+        const includedMins = nonNegativeFinite(billing.included_minutes);
+        const usedMins = nonNegativeFinite(billing.total_minutes_used);
+        const paidMins = nonNegativeFinite(billing.total_paid_minutes_used);
         const percentUsed =
           includedMins > 0 ? ((usedMins / includedMins) * 100).toFixed(1) : 'N/A';
 

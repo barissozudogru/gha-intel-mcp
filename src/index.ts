@@ -937,8 +937,13 @@ server.registerTool(
             `/repos/${owner}/${repo}/actions/cache/usage`
           );
 
-          const sizeGB = (cache.active_caches_size_in_bytes / 1_073_741_824).toFixed(3);
-          const sizeMB = (cache.active_caches_size_in_bytes / 1_048_576).toFixed(1);
+          const cacheSizeBytes =
+            typeof cache.active_caches_size_in_bytes === 'number' &&
+            Number.isFinite(cache.active_caches_size_in_bytes)
+              ? Math.max(0, cache.active_caches_size_in_bytes)
+              : 0;
+          const sizeGB = (cacheSizeBytes / 1_073_741_824).toFixed(3);
+          const sizeMB = (cacheSizeBytes / 1_048_576).toFixed(1);
 
           resultSections.push(
             '',
@@ -949,12 +954,12 @@ server.registerTool(
           );
 
           const cacheUsedPct = (
-            (cache.active_caches_size_in_bytes / (10 * 1_073_741_824)) *
+            (cacheSizeBytes / (10 * 1_073_741_824)) *
             100
           ).toFixed(1);
           resultSections.push(`  Cache utilisation:     ${cacheUsedPct}%`);
 
-          if (cache.active_caches_size_in_bytes > 8 * 1_073_741_824) {
+          if (cacheSizeBytes > 8 * 1_073_741_824) {
             resultSections.push(
               '',
               'WARNING: Cache is above 80% of the 10 GB limit. Old caches will be evicted soon.',
@@ -965,7 +970,7 @@ server.registerTool(
           structuredResult['cache_usage'] = {
             repository: `${owner}/${repo}`,
             active_caches_count: cache.active_caches_count,
-            active_caches_size_bytes: cache.active_caches_size_in_bytes,
+            active_caches_size_bytes: cacheSizeBytes,
             active_caches_size_mb: parseFloat(sizeMB),
             cache_utilisation_percent: parseFloat(cacheUsedPct),
           };

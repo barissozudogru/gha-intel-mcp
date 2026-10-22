@@ -459,6 +459,54 @@ test('get_billing_usage clamps invalid aggregate billing minutes to zero', async
   }
 });
 
+test('get_billing_usage clamps invalid cache size to zero', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const originalFetch = globalThis.fetch;
+  const originalToken = process.env.GITHUB_TOKEN;
+  process.env.GITHUB_TOKEN = 'test-token';
+
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes('/settings/billing/actions')) {
+      return new Response('not found', { status: 404 });
+    }
+    if (url.includes('/actions/cache/usage')) {
+      return new Response(
+        JSON.stringify({
+          full_name: 'test-owner/test-repo',
+          active_caches_size_in_bytes: -1,
+          active_caches_count: 0,
+        }),
+        { status: 200 }
+      );
+    }
+    return new Response('not found', { status: 404 });
+  }) as typeof fetch;
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'get_billing_usage',
+      arguments: { owner: 'test-owner', repo: 'test-repo' },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.match(text, /Total cache size:\s+0\.0 MB \(0\.000 GB\)/);
+    assert.match(text, /Cache utilisation:\s+0\.0%/);
+    assert.doesNotMatch(text, /-1|NaN/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalToken === undefined) {
+      delete process.env.GITHUB_TOKEN;
+    } else {
+      process.env.GITHUB_TOKEN = originalToken;
+    }
+    await client.close();
+    await server.close();
+  }
+});
+
 test('list_workflow_performance rejects an empty workflow identifier', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });

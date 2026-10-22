@@ -942,13 +942,17 @@ server.registerTool(
             Number.isFinite(cache.active_caches_size_in_bytes)
               ? Math.max(0, cache.active_caches_size_in_bytes)
               : 0;
+          const activeCachesCount =
+            typeof cache.active_caches_count === 'number' && Number.isFinite(cache.active_caches_count)
+              ? Math.max(0, Math.trunc(cache.active_caches_count))
+              : 0;
           const sizeGB = (cacheSizeBytes / 1_073_741_824).toFixed(3);
           const sizeMB = (cacheSizeBytes / 1_048_576).toFixed(1);
 
           resultSections.push(
             '',
             `Cache Usage: ${owner}/${repo}`,
-            `  Active caches:         ${cache.active_caches_count}`,
+            `  Active caches:         ${activeCachesCount}`,
             `  Total cache size:      ${sizeMB} MB (${sizeGB} GB)`,
             `  GitHub cache limit:    10 GB per repo`
           );
@@ -969,7 +973,7 @@ server.registerTool(
 
           structuredResult['cache_usage'] = {
             repository: `${owner}/${repo}`,
-            active_caches_count: cache.active_caches_count,
+            active_caches_count: activeCachesCount,
             active_caches_size_bytes: cacheSizeBytes,
             active_caches_size_mb: parseFloat(sizeMB),
             cache_utilisation_percent: parseFloat(cacheUsedPct),

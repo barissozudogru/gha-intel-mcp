@@ -459,7 +459,7 @@ test('get_billing_usage clamps invalid aggregate billing minutes to zero', async
   }
 });
 
-test('get_billing_usage clamps invalid cache size to zero', async () => {
+test('get_billing_usage clamps invalid cache usage values to zero', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -477,7 +477,7 @@ test('get_billing_usage clamps invalid cache size to zero', async () => {
         JSON.stringify({
           full_name: 'test-owner/test-repo',
           active_caches_size_in_bytes: -1,
-          active_caches_count: 0,
+          active_caches_count: -3,
         }),
         { status: 200 }
       );
@@ -492,6 +492,7 @@ test('get_billing_usage clamps invalid cache size to zero', async () => {
       arguments: { owner: 'test-owner', repo: 'test-repo' },
     });
     const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.match(text, /Active caches:\s+0/);
     assert.match(text, /Total cache size:\s+0\.0 MB \(0\.000 GB\)/);
     assert.match(text, /Cache utilisation:\s+0\.0%/);
     assert.doesNotMatch(text, /-1|NaN/);

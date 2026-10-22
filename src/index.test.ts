@@ -410,6 +410,55 @@ test('get_billing_usage ignores negative runner minutes when estimating cost', a
   }
 });
 
+test('get_billing_usage clamps invalid aggregate billing minutes to zero', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const originalFetch = globalThis.fetch;
+  const originalToken = process.env.GITHUB_TOKEN;
+  process.env.GITHUB_TOKEN = 'test-token';
+
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes('/orgs/')) return new Response('not found', { status: 404 });
+    if (url.includes('/users/')) {
+      return new Response(
+        JSON.stringify({
+          total_minutes_used: -10,
+          total_paid_minutes_used: -3,
+          included_minutes: -100,
+          minutes_used_breakdown: {},
+        }),
+        { status: 200 }
+      );
+    }
+    throw new Error(`Unexpected request: ${url}`);
+  }) as typeof fetch;
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'get_billing_usage',
+      arguments: { owner: 'test-owner' },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.match(text, /Total minutes used:\s+0 min/);
+    assert.match(text, /Included minutes:\s+0 min/);
+    assert.match(text, /Paid minutes:\s+0 min/);
+    assert.match(text, /Plan utilisation:\s+N\/A%/);
+    assert.doesNotMatch(text, /-10|-100|-3/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalToken === undefined) {
+      delete process.env.GITHUB_TOKEN;
+    } else {
+      process.env.GITHUB_TOKEN = originalToken;
+    }
+    await client.close();
+    await server.close();
+  }
+});
+
 test('list_workflow_performance rejects an empty workflow identifier', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });

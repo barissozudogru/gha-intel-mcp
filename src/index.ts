@@ -274,6 +274,7 @@ server.registerTool(
         .string()
         .min(1, 'workflow_id must not be empty')
         .refine((value) => value.trim().length > 0, 'workflow_id must not be whitespace')
+        .refine((value) => value === value.trim(), 'workflow_id must not have surrounding whitespace')
         .describe('Workflow file name (e.g. ci.yml) or numeric workflow ID'),
       count: z
         .number()

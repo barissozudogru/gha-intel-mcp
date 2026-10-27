@@ -62,6 +62,15 @@ test('avg ignores non-finite samples', () => {
   assert.equal(avg([Number.NaN, Number.NEGATIVE_INFINITY]), 0);
 });
 
+test('avg avoids overflow when finite samples have a large magnitude', () => {
+  assert.equal(avg([Number.MAX_VALUE, Number.MAX_VALUE]), Number.MAX_VALUE);
+  assert.equal(avg([Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE]), Number.MAX_VALUE);
+});
+
+test('avg preserves the smallest non-zero finite magnitude', () => {
+  assert.equal(avg([Number.MIN_VALUE, Number.MIN_VALUE]), Number.MIN_VALUE);
+});
+
 test('computeRunTiming calculates parallel wall clock and billable seconds', () => {
   const jobs = [
     {

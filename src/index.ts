@@ -493,7 +493,7 @@ server.registerTool(
   },
   async ({ workflow_content }) => {
     try {
-      const content = workflow_content;
+      const content = workflow_content.replace(/^\uFEFF/, '');
 
       // Validate that the input looks like a GHA workflow
       const hasWorkflowKey = (key: string) =>

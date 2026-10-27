@@ -1415,5 +1415,30 @@ steps: []
   }
 });
 
+test('analyze_workflow_config accepts workflows with a UTF-8 BOM', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: '\uFEFFon: push\njobs:\n  build:\n    runs-on: ubuntu-24.04\n    steps: []\n',
+      },
+    });
+
+    assert.equal(result.isError, undefined);
+    assert.match(
+      (result.content as Array<{ type: string; text: string }>)[0].text,
+      /Push trigger has no paths filter\./
+    );
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
 
 

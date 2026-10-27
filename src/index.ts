@@ -183,7 +183,15 @@ export function percentile(sorted: number[], p: number): number {
 export function avg(values: number[]): number {
   const finiteValues = values.filter(Number.isFinite);
   if (finiteValues.length === 0) return 0;
-  return finiteValues.reduce((a, b) => a + b, 0) / finiteValues.length;
+
+  let scale = 0;
+  for (const value of finiteValues) {
+    scale = Math.max(scale, Math.abs(value));
+  }
+  if (scale === 0) return 0;
+
+  const normalizedTotal = finiteValues.reduce((total, value) => total + value / scale, 0);
+  return (normalizedTotal / finiteValues.length) * scale;
 }
 
 export function fmtSeconds(s: number): string {

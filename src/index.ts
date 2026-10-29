@@ -647,8 +647,8 @@ server.registerTool(
       }
 
       // --- Checkout depth ---
-      const hasShallowClone = hasPattern(/fetch-depth:\s*[1-9]\d*/);
-      const hasFullClone = hasPattern(/fetch-depth:\s*0/);
+      const hasShallowClone = hasPattern(/fetch-depth:\s*['"]?[1-9]\d*['"]?(?=\s|$|[,}])/);
+      const hasFullClone = hasPattern(/fetch-depth:\s*['"]?0['"]?(?=\s|$|[,}])/);
       if (hasFullClone) {
         findings.push({
           severity: 'info',

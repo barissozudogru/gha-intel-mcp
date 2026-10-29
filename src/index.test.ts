@@ -1328,6 +1328,71 @@ jobs:
   }
 });
 
+test('analyze_workflow_config recognizes quoted full checkout depth', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+name: CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+`,
+      },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.match(text, /\[INFO\] \[checkout\] Full git history is being fetched \(fetch-depth: 0\)\./);
+    assert.doesNotMatch(text, /Shallow clone \(default fetch-depth: 1\) is used/);
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
+test('analyze_workflow_config recognizes flow-style checkout depth', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+name: CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: "0"}
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+`,
+      },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.match(text, /\[INFO\] \[checkout\] Full git history is being fetched \(fetch-depth: 0\)\./);
+    assert.doesNotMatch(text, /Shallow clone \(default fetch-depth: 1\) is used/);
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
 test('analyze_workflow_config keeps quoted ubuntu-latest warnings with mixed runner labels', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });

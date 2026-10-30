@@ -1078,6 +1078,38 @@ jobs:
   }
 });
 
+test('analyze_workflow_config recognizes flow-style setup-node caching', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+name: CI
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with: {cache: npm}
+      - run: npm ci
+`,
+      },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.match(text, /\[OK\] \[caching\] Dependency caching is configured\./);
+    assert.doesNotMatch(text, /Dependency installation detected but no caching is configured\./);
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
 test('analyze_workflow_config does not accept unsupported setup cache values', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });

@@ -549,7 +549,7 @@ server.registerTool(
         hasPattern(/\byarn\b(?!\s+(?:-v|--version|version)\b)(?=\s|$|[;&|])/);
       const hasPipInstall = hasPattern(/\bpip(?:3(?:\.\d+)?)?\s+install(?=$|[\s;&|])/);
       const hasCargoFetch = hasPattern(/cargo\s+(?:build|test|fetch)/);
-      const hasMavenInstall = hasPattern(/mvn\s+(?:install|package|test)/);
+      const hasMavenInstall = hasPattern(/mvn\s+(?:install|package|test)(?=$|[\s;&|])/);
       const hasDependencyInstall =
         hasNpmInstall || hasYarnInstall || hasPipInstall || hasCargoFetch || hasMavenInstall;
 

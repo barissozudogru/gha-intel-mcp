@@ -67,6 +67,10 @@ test('avg avoids overflow when finite samples have a large magnitude', () => {
   assert.equal(avg([Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE]), Number.MAX_VALUE);
 });
 
+test('avg preserves small values when large values cancel', () => {
+  assert.ok(Math.abs(avg([Number.MAX_VALUE, 1, -Number.MAX_VALUE]) - 1 / 3) < 1e-15);
+});
+
 test('avg preserves the smallest non-zero finite magnitude', () => {
   assert.equal(avg([Number.MIN_VALUE, Number.MIN_VALUE]), Number.MIN_VALUE);
 });

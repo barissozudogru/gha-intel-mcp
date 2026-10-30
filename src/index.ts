@@ -190,8 +190,19 @@ export function avg(values: number[]): number {
   }
   if (scale === 0) return 0;
 
-  const normalizedTotal = finiteValues.reduce((total, value) => total + value / scale, 0);
-  return (normalizedTotal / finiteValues.length) * scale;
+  let normalizedTotal = 0;
+  let compensation = 0;
+  for (const value of finiteValues) {
+    const normalizedValue = value / scale;
+    const nextTotal = normalizedTotal + normalizedValue;
+    if (Math.abs(normalizedTotal) >= Math.abs(normalizedValue)) {
+      compensation += (normalizedTotal - nextTotal) + normalizedValue;
+    } else {
+      compensation += (normalizedValue - nextTotal) + normalizedTotal;
+    }
+    normalizedTotal = nextTotal;
+  }
+  return ((normalizedTotal + compensation) / finiteValues.length) * scale;
 }
 
 export function fmtSeconds(s: number): string {

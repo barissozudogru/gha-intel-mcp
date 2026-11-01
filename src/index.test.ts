@@ -1082,6 +1082,37 @@ jobs:
   }
 });
 
+test('analyze_workflow_config ignores commands in full-line comments', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+name: CI
+on: push
+# run: npm install
+# runs-on: ubuntu-latest
+jobs:
+  build:
+    steps: []
+`,
+      },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.doesNotMatch(text, /Dependency installation detected but no caching is configured\./);
+    assert.doesNotMatch(text, /No matrix strategy detected\./);
+    assert.doesNotMatch(text, /Using ubuntu-latest which is a floating label\./);
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
 test('analyze_workflow_config recognizes flow-style setup-node caching', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });

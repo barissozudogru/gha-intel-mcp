@@ -523,10 +523,11 @@ server.registerTool(
 
       const findings: Finding[] = [];
       const lines = content.split('\n');
+      const analysisContent = lines.filter((line) => !/^\s*#/.test(line)).join('\n');
 
       // Helper: count occurrences
-      const occurrences = (pattern: RegExp) => (content.match(pattern) ?? []).length;
-      const hasPattern = (pattern: RegExp) => pattern.test(content);
+      const occurrences = (pattern: RegExp) => (analysisContent.match(pattern) ?? []).length;
+      const hasPattern = (pattern: RegExp) => pattern.test(analysisContent);
 
       // --- Caching ---
       const hasActionsCache = hasPattern(/actions\/cache/);
@@ -701,7 +702,7 @@ server.registerTool(
       }
 
       // --- Runner type ---
-      const ubuntuRunnerLabels = [...content.matchAll(/runs-on:\s*['"]?(ubuntu-(?:latest|2\d(?:\.\d+)?))(?![A-Za-z0-9_.-])['"]?/g)].map(
+      const ubuntuRunnerLabels = [...analysisContent.matchAll(/runs-on:\s*['"]?(ubuntu-(?:latest|2\d(?:\.\d+)?))(?![A-Za-z0-9_.-])['"]?/g)].map(
         (match) => match[1],
       );
       const hasUbuntuLatest = ubuntuRunnerLabels.includes('ubuntu-latest');

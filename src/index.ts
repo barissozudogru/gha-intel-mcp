@@ -530,7 +530,7 @@ server.registerTool(
       const hasPattern = (pattern: RegExp) => pattern.test(analysisContent);
 
       // --- Caching ---
-      const hasActionsCache = hasPattern(/actions\/cache/);
+      const hasActionsCache = hasPattern(/(?:^|[\s"'])actions\/cache(?:@|\/)/);
       const hasSetupNodeCache = hasPattern(/cache:\s*['"]?(?:npm|yarn|pnpm)(?=['"]?(?:\s|$|[,}]))/);
       const hasSetupPythonCache = hasPattern(/cache:\s*['"]?pip(?=['"]?(?:\s|$|[,}]))/);
       const hasSetupJavaCache = hasPattern(/cache:\s*['"]?(?:maven|gradle|sbt)(?=['"]?(?:\s|$|[,}]))/);

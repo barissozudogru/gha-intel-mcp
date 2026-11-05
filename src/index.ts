@@ -192,8 +192,20 @@ export function avg(values: number[]): number {
 
   let normalizedTotal = 0;
   let compensation = 0;
+  let underflowedTotal = 0;
+  let underflowedCompensation = 0;
   for (const value of finiteValues) {
     const normalizedValue = value / scale;
+    if (normalizedValue === 0 && value !== 0) {
+      const nextUnderflowedTotal = underflowedTotal + value;
+      if (Math.abs(underflowedTotal) >= Math.abs(value)) {
+        underflowedCompensation += (underflowedTotal - nextUnderflowedTotal) + value;
+      } else {
+        underflowedCompensation += (value - nextUnderflowedTotal) + underflowedTotal;
+      }
+      underflowedTotal = nextUnderflowedTotal;
+      continue;
+    }
     const nextTotal = normalizedTotal + normalizedValue;
     if (Math.abs(normalizedTotal) >= Math.abs(normalizedValue)) {
       compensation += (normalizedTotal - nextTotal) + normalizedValue;
@@ -202,7 +214,10 @@ export function avg(values: number[]): number {
     }
     normalizedTotal = nextTotal;
   }
-  return ((normalizedTotal + compensation) / finiteValues.length) * scale;
+  return (
+    ((normalizedTotal + compensation) / finiteValues.length) * scale +
+    (underflowedTotal + underflowedCompensation) / finiteValues.length
+  );
 }
 
 export function fmtSeconds(s: number): string {

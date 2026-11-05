@@ -488,6 +488,52 @@ interface Finding {
   recommendation?: string;
 }
 
+function stripYamlComment(line: string): string {
+  let quote: 'single' | 'double' | null = null;
+
+  const isQuotedScalarStart = (index: number): boolean => {
+    const prefix = line.slice(0, index);
+    return (
+      index === 0 ||
+      /:\s*$/.test(prefix) ||
+      /^\s*-\s*$/.test(prefix) ||
+      /[\[,\{]\s*$/.test(prefix)
+    );
+  };
+
+  for (let index = 0; index < line.length; index++) {
+    const character = line[index];
+
+    if (quote === 'single') {
+      if (character === "'" && line[index + 1] === "'") {
+        index++;
+      } else if (character === "'") {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (quote === 'double') {
+      if (character === '\\') {
+        index++;
+      } else if (character === '"') {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (character === "'" && isQuotedScalarStart(index)) {
+      quote = 'single';
+    } else if (character === '"' && isQuotedScalarStart(index)) {
+      quote = 'double';
+    } else if (character === '#' && (index === 0 || /\s/.test(line[index - 1]))) {
+      return line.slice(0, index);
+    }
+  }
+
+  return line;
+}
+
 server.registerTool(
   'analyze_workflow_config',
   {
@@ -523,7 +569,7 @@ server.registerTool(
 
       const findings: Finding[] = [];
       const lines = content.split('\n');
-      const analysisContent = lines.filter((line) => !/^\s*#/.test(line)).join('\n');
+      const analysisContent = lines.map(stripYamlComment).join('\n');
 
       // Helper: count occurrences
       const occurrences = (pattern: RegExp) => (analysisContent.match(pattern) ?? []).length;

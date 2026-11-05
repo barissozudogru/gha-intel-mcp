@@ -75,6 +75,16 @@ test('avg preserves the smallest non-zero finite magnitude', () => {
   assert.equal(avg([Number.MIN_VALUE, Number.MIN_VALUE]), Number.MIN_VALUE);
 });
 
+test('avg preserves samples that underflow during scale normalization', () => {
+  const result = avg([Number.MAX_VALUE, 1e-200, -Number.MAX_VALUE]);
+  assert.equal(result, 1e-200 / 3);
+});
+
+test('avg preserves multiple underflowed samples during cancellation', () => {
+  const result = avg([Number.MAX_VALUE, 4e-16, 1e-200, -4e-16, -Number.MAX_VALUE]);
+  assert.equal(result, 2e-201);
+});
+
 test('computeRunTiming calculates parallel wall clock and billable seconds', () => {
   const jobs = [
     {

@@ -605,7 +605,7 @@ server.registerTool(
         hasRustCache ||
         hasSetupGo;
 
-      const hasNpmInstall = hasPattern(/npm\s+(?:ci|install)(?=$|[\s;&|])/);
+      const hasNpmInstall = hasPattern(/(?<![\w-])npm\s+(?:ci|install)(?=$|[\s;&|])/);
       const hasYarnInstall =
         hasPattern(/yarn\s+install(?=$|[\s;&|])/) ||
         hasPattern(/\byarn\b(?!\s+(?:-v|--version|version|--help|help|install(?=$|[\s;&|_-])))(?=\s|$|[;&|])/);

@@ -778,7 +778,7 @@ server.registerTool(
       }
 
       // --- Self-hosted runners ---
-      const hasSelfHosted = hasPattern(/runs-on:.*self-hosted/);
+      const hasSelfHosted = hasPattern(/runs-on:[^\n]*(?<![\w-])self-hosted(?![\w-])/);
       if (hasSelfHosted) {
         findings.push({
           severity: 'info',

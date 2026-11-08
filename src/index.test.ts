@@ -2066,5 +2066,35 @@ test('analyze_workflow_config accepts workflows with a UTF-8 BOM', async () => {
   }
 });
 
+test('analyze_workflow_config does not mistake an unrelated paths suffix for a push filter', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    artifact-paths: dist/**
+    steps: []
+`,
+      },
+    });
+
+    assert.match(
+      (result.content as Array<{ type: string; text: string }>)[0].text,
+      /Push trigger has no paths filter\./
+    );
+  } finally {
+    await client.close();
+  }
+});
+
 
 

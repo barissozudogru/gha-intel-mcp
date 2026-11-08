@@ -363,6 +363,7 @@ server.registerTool(
           // Jobs that were skipped never executed and carry no timestamps.
           // durationSeconds would return 0 for them, injecting bogus samples
           // that drag down the average, force min to 0s, and overcount runs.
+          if (job.conclusion === 'skipped') continue;
           if (!job.started_at || !job.completed_at) continue;
 
           const jobStart = new Date(job.started_at).getTime();

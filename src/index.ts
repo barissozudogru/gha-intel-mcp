@@ -551,6 +551,41 @@ function stripYamlComment(line: string): string {
   return line;
 }
 
+function hasNestedTriggerFilter(lines: string[], trigger: 'push' | 'pull_request'): boolean {
+  let onIndent: number | null = null;
+  let triggerIndent: number | null = null;
+
+  for (const line of lines) {
+    const uncommented = stripYamlComment(line);
+    if (uncommented.trim() === '') continue;
+
+    const indent = uncommented.length - uncommented.trimStart().length;
+    const trimmed = uncommented.trim();
+
+    if (onIndent === null) {
+      if (indent === 0 && /^["']?on["']?\s*:/.test(trimmed)) onIndent = indent;
+      continue;
+    }
+
+    if (indent <= onIndent) break;
+
+    if (triggerIndent === null) {
+      const triggerMatch = trimmed.match(new RegExp(`^["']?${trigger}["']?\\s*:(.*)$`));
+      if (!triggerMatch) continue;
+      triggerIndent = indent;
+      if (/(?:^|[,{])\s*["']?(?:paths|paths-ignore)["']?\s*:/.test(triggerMatch[1])) {
+        return true;
+      }
+      continue;
+    }
+
+    if (indent <= triggerIndent) break;
+    if (/^["']?(?:paths|paths-ignore)["']?\s*:/.test(trimmed)) return true;
+  }
+
+  return false;
+}
+
 server.registerTool(
   'analyze_workflow_config',
   {
@@ -797,10 +832,9 @@ server.registerTool(
       // --- Workflow triggers ---
       const hasPushTrigger = hasPattern(/^on:\s*\n\s+push:/m) || hasPattern(/^on:\s+push/m);
       const hasPullRequestTrigger = hasPattern(/pull_request:/);
-      const hasPathFilter = hasPattern(/(?:^|[\s,{])['"]?paths['"]?\s*:/);
-      const hasPathIgnore = hasPattern(/(?:^|[\s,{])['"]?paths-ignore['"]?\s*:/);
+      const hasPushPathFilter = hasNestedTriggerFilter(lines, 'push');
 
-      if (hasPushTrigger && !hasPathFilter && !hasPathIgnore) {
+      if (hasPushTrigger && !hasPushPathFilter) {
         findings.push({
           severity: 'info',
           category: 'triggers',

@@ -2096,5 +2096,115 @@ jobs:
   }
 });
 
+test('analyze_workflow_config ignores action paths inputs when checking push filters', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+on:
+  push:
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: dorny/paths-filter@v3
+        with:
+          paths:
+            - src/**
+`,
+      },
+    });
+
+    assert.match(
+      (result.content as Array<{ type: string; text: string }>)[0].text,
+      /Push trigger has no paths filter\./
+    );
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
+test('analyze_workflow_config recognizes push paths filters and ignores block scalar content', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const workflows = [
+      {
+        content: `
+on:
+  push:
+    paths:
+      - src/**
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps: []
+`,
+        expectsPushFilterWarning: false,
+      },
+      {
+        content: `
+on:
+  push:
+    paths-ignore:
+      - docs/**
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps: []
+`,
+        expectsPushFilterWarning: false,
+      },
+      {
+        content: `
+name: CI
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          on:
+            push:
+              paths:
+                - docs/**
+on: push
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    steps: []
+`,
+        expectsPushFilterWarning: true,
+      },
+    ];
+
+    for (const workflow of workflows) {
+      const result = await client.callTool({
+        name: 'analyze_workflow_config',
+        arguments: { workflow_content: workflow.content },
+      });
+
+      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      if (workflow.expectsPushFilterWarning) {
+        assert.match(text, /Push trigger has no paths filter\./, workflow.content);
+      } else {
+        assert.doesNotMatch(text, /Push trigger has no paths filter\./, workflow.content);
+      }
+    }
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
 
 

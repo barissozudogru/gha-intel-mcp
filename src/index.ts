@@ -239,6 +239,7 @@ export function computeRunTiming(jobs: Job[]): { wall_clock_seconds: number; bil
   let billable = 0;
 
   for (const job of jobs) {
+    if (job.conclusion === 'skipped') continue;
     if (job.started_at && job.completed_at) {
       const start = new Date(job.started_at).getTime();
       const end = new Date(job.completed_at).getTime();

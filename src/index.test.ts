@@ -1619,6 +1619,36 @@ jobs:
   }
 });
 
+test('analyze_workflow_config recognizes flow-style concurrency configurations', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+name: CI
+on: [push]
+"concurrency": {group: ci, cancel-in-progress: true}
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps: []
+`,
+      },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.match(text, /\[OK\] \[concurrency\] Concurrency with cancel-in-progress: true is configured\./);
+    assert.doesNotMatch(text, /No concurrency group is configured\./);
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
 test('analyze_workflow_config does not mistake a prefixed npm command for installation', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });

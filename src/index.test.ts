@@ -184,6 +184,34 @@ test('computeRunTiming ignores jobs whose completion precedes their start', () =
   });
 });
 
+test('computeRunTiming excludes skipped jobs even when timestamps are present', () => {
+  const jobs = [
+    {
+      id: 1,
+      name: 'skipped',
+      status: 'completed',
+      conclusion: 'skipped',
+      started_at: '2026-01-01T00:00:00Z',
+      completed_at: '2026-01-01T00:10:00Z',
+      steps: [],
+    },
+    {
+      id: 2,
+      name: 'build',
+      status: 'completed',
+      conclusion: 'success',
+      started_at: '2026-01-01T00:00:00Z',
+      completed_at: '2026-01-01T00:01:00Z',
+      steps: [],
+    },
+  ];
+
+  assert.deepEqual(computeRunTiming(jobs), {
+    wall_clock_seconds: 60,
+    billable_seconds: 60,
+  });
+});
+
 test('list_workflow_performance excludes jobs whose completion precedes their start', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });

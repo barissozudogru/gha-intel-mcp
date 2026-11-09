@@ -1222,6 +1222,36 @@ jobs:
   }
 });
 
+test('analyze_workflow_config does not mistake a similarly named action for setup-go caching', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: acme/actions/setup-go-not-real@v1
+      - run: npm ci
+`,
+      },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.match(text, /Dependency installation detected but no caching is configured\./);
+    assert.doesNotMatch(text, /Dependency caching is configured\./);
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
 test('analyze_workflow_config ignores commands in full-line comments', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });

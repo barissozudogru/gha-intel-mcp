@@ -633,7 +633,7 @@ server.registerTool(
       const hasSetupPythonCache = hasPattern(/cache:\s*['"]?pip(?=['"]?(?:\s|$|[,}]))/);
       const hasSetupJavaCache = hasPattern(/cache:\s*['"]?(?:maven|gradle|sbt)(?=['"]?(?:\s|$|[,}]))/);
       const hasRustCache = hasPattern(/Swatinem\/rust-cache/i);
-      const hasSetupGo = hasPattern(/actions\/setup-go/i);
+      const hasSetupGo = hasPattern(/(?:^|[\s"'[\],])actions\/setup-go(?:@|\/)/i);
       const hasCaching =
         hasActionsCache ||
         hasSetupNodeCache ||

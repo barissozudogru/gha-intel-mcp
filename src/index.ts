@@ -605,8 +605,16 @@ server.registerTool(
       const content = workflow_content.replace(/^\uFEFF/, '');
 
       // Validate that the input looks like a GHA workflow
+      const contentLines = content.split('\n').map(stripYamlComment);
+      const firstContentLine = contentLines.find((line) => line.trim() !== '');
+      const rootIndent = firstContentLine
+        ? firstContentLine.length - firstContentLine.trimStart().length
+        : 0;
       const hasWorkflowKey = (key: string) =>
-        new RegExp(`(?:^|\\n)\\s*["']?${key}["']?\\s*:`, 'i').test(content);
+        contentLines.some((line) => {
+          if (line.length - line.trimStart().length !== rootIndent) return false;
+          return new RegExp(`^["']?${key}["']?\\s*:`, 'i').test(line.trim());
+        });
       if (!hasWorkflowKey('on') && !hasWorkflowKey('jobs')) {
         return {
           content: [

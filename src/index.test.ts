@@ -2071,6 +2071,61 @@ steps: []
   }
 });
 
+test('analyze_workflow_config rejects nested workflow keys', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+metadata:
+  on: push
+steps: []
+`,
+      },
+    });
+    assert.equal(result.isError, true);
+    assert.match(
+      (result.content as Array<{ type: string; text: string }>)[0].text,
+      /does not appear to be a GitHub Actions workflow/
+    );
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
+test('analyze_workflow_config accepts uniformly indented root mappings', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+  name: Indented workflow
+  on: push
+  jobs:
+    build:
+      runs-on: ubuntu-latest
+      steps: []
+`,
+      },
+    });
+    assert.equal(result.isError, undefined);
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
 test('analyze_workflow_config accepts workflows with a UTF-8 BOM', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });

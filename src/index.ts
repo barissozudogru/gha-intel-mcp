@@ -551,7 +551,11 @@ function stripYamlComment(line: string): string {
   return line;
 }
 
-function hasNestedTriggerFilter(lines: string[], trigger: 'push' | 'pull_request'): boolean {
+function hasNestedTriggerFilter(
+  lines: string[],
+  trigger: 'push' | 'pull_request',
+  rootIndent = 0,
+): boolean {
   let onIndent: number | null = null;
   let triggerIndent: number | null = null;
 
@@ -563,7 +567,7 @@ function hasNestedTriggerFilter(lines: string[], trigger: 'push' | 'pull_request
     const trimmed = uncommented.trim();
 
     if (onIndent === null) {
-      if (indent === 0 && /^["']?on["']?\s*:/.test(trimmed)) onIndent = indent;
+      if (indent === rootIndent && /^["']?on["']?\s*:/.test(trimmed)) onIndent = indent;
       continue;
     }
 
@@ -838,9 +842,12 @@ server.registerTool(
       }
 
       // --- Workflow triggers ---
-      const hasPushTrigger = hasPattern(/^on:\s*\n\s+push:/m) || hasPattern(/^on:\s+push/m);
+      const rootIndentPrefix = `[ \\t]{${rootIndent}}`;
+      const hasPushTrigger =
+        hasPattern(new RegExp(`^${rootIndentPrefix}on:\\s*\\n\\s+push:`, 'm')) ||
+        hasPattern(new RegExp(`^${rootIndentPrefix}on:\\s+push`, 'm'));
       const hasPullRequestTrigger = hasPattern(/pull_request:/);
-      const hasPushPathFilter = hasNestedTriggerFilter(lines, 'push');
+      const hasPushPathFilter = hasNestedTriggerFilter(lines, 'push', rootIndent);
 
       if (hasPushTrigger && !hasPushPathFilter) {
         findings.push({

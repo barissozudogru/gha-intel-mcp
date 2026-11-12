@@ -641,7 +641,7 @@ server.registerTool(
 
       // --- Caching ---
       const hasActionsCache = hasPattern(/(?:^|[\s"'])actions\/cache(?:@|\/)/);
-      const hasSetupNodeCache = hasPattern(/cache:\s*['"]?(?:npm|yarn|pnpm)(?=['"]?(?:\s|$|[,}]))/);
+      const hasSetupNodeCache = hasPattern(/(?<![\w-])cache:\s*['"]?(?:npm|yarn|pnpm)(?=['"]?(?:\s|$|[,}]))/);
       const hasSetupPythonCache = hasPattern(/cache:\s*['"]?pip(?=['"]?(?:\s|$|[,}]))/);
       const hasSetupJavaCache = hasPattern(/cache:\s*['"]?(?:maven|gradle|sbt)(?=['"]?(?:\s|$|[,}]))/);
       const hasRustCache = hasPattern(/Swatinem\/rust-cache/i);

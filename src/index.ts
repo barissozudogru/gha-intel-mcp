@@ -794,7 +794,7 @@ server.registerTool(
       }
 
       // --- Timeout ---
-      const hasJobTimeout = hasPattern(/timeout-minutes:/);
+      const hasJobTimeout = hasPattern(/(?:^|[\r\n][ \t]*|[,{][ \t]*)["']?timeout-minutes["']?\s*:/m);
       if (!hasJobTimeout) {
         findings.push({
           severity: 'warning',

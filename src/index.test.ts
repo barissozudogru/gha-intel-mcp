@@ -1873,6 +1873,59 @@ jobs:
   }
 });
 
+test('analyze_workflow_config does not mistake a suffixed timeout key for timeout-minutes', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const workflows = [
+      {
+        content: `
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    job-timeout-minutes: 5
+    steps: []
+`,
+        expected: /No timeout-minutes is set on any job\./,
+      },
+      {
+        content: `
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps: []
+`,
+        expected: /timeout-minutes is configured on at least one job\./,
+      },
+      {
+        content: `
+on: push
+jobs: {build: {runs-on: ubuntu-24.04, timeout-minutes: 5, steps: []}}
+`,
+        expected: /timeout-minutes is configured on at least one job\./,
+      },
+    ];
+
+    for (const workflow of workflows) {
+      const result = await client.callTool({
+        name: 'analyze_workflow_config',
+        arguments: { workflow_content: workflow.content },
+      });
+      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      assert.match(text, workflow.expected, workflow.content);
+    }
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
 test('analyze_workflow_config recognizes flow-style concurrency configurations', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });

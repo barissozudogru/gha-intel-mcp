@@ -731,7 +731,7 @@ server.registerTool(
             'Add a concurrency block to cancel in-progress runs on the same branch/PR when a new commit is pushed. This prevents wasting runner minutes on stale builds:\n\nconcurrency:\n  group: ${{ github.workflow }}-${{ github.ref }}\n  cancel-in-progress: true',
         });
       } else {
-        const hasCancelInProgress = hasPattern(/cancel-in-progress:\s*true/);
+        const hasCancelInProgress = hasPattern(/cancel-in-progress:\s*true(?=\s|$|[,}])/);
         if (!hasCancelInProgress) {
           findings.push({
             severity: 'info',

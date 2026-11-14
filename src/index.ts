@@ -681,7 +681,9 @@ server.registerTool(
       }
 
       // --- Matrix strategy ---
-      const hasMatrix = hasPattern(/strategy:\s*\n\s+matrix:/m) || hasPattern(/matrix:/);
+      const hasMatrix = hasPattern(
+        /(?:^|[\r\n][ \t]*|[,{][ \t]*)["']?matrix["']?\s*:/m
+      );
       if (hasMatrix) {
         findings.push({
           severity: 'good',

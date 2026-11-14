@@ -1903,6 +1903,71 @@ jobs:
   }
 });
 
+test('analyze_workflow_config does not mistake a suffixed matrix key for a matrix strategy', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    not-matrix: true
+    steps: []
+`,
+      },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.doesNotMatch(text, /Matrix strategy is in use\./);
+    assert.doesNotMatch(text, /Matrix fail-fast is not set to false\./);
+    assert.doesNotMatch(text, /No max-parallel limit is set on the matrix\./);
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
+test('analyze_workflow_config recognizes block and flow-style matrix strategies', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    for (const strategy of [
+      `strategy:\n      matrix:\n        node: [20]`,
+      `strategy: { matrix: { node: [20] } }`,
+    ]) {
+      const result = await client.callTool({
+        name: 'analyze_workflow_config',
+        arguments: {
+          workflow_content: `
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    ${strategy}
+    steps: []
+`,
+        },
+      });
+      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      assert.match(text, /Matrix strategy is in use \(/, strategy);
+      assert.match(text, /Matrix fail-fast is not set to false\./, strategy);
+      assert.match(text, /No max-parallel limit is set on the matrix\./, strategy);
+    }
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
 test('analyze_workflow_config does not accept a suffixed cancel-in-progress value', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });

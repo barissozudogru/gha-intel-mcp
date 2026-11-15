@@ -677,7 +677,7 @@ server.registerTool(
       const hasYarnInstall =
         hasPattern(/(?<![\w-])yarn\s+install(?=$|[\s;&|])/) ||
         hasPattern(/(?<![\w-])yarn\b(?!\s+(?:-v|--version|version|--help|help|install(?=$|[\s;&|_-])))(?=\s|$|[;&|])/);
-      const hasPipInstall = hasPattern(/\bpip(?:3(?:\.\d+)?)?\s+install(?=$|[\s;&|])/);
+      const hasPipInstall = hasPattern(/(?<![\w-])pip(?:3(?:\.\d+)?)?\s+install(?=$|[\s;&|])/);
       const hasCargoFetch = hasPattern(/(?<![\w-])cargo\s+(?:build|test|fetch)(?=$|[\s;&|])/);
       const hasMavenInstall = hasPattern(/(?<![\w-])mvn\s+(?:install|package|test)(?=$|[\s;&|])/);
       const hasDependencyInstall =

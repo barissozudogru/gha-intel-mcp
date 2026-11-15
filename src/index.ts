@@ -893,7 +893,9 @@ server.registerTool(
       }
 
       // --- Environment variable repetition ---
-      const envLineCount = lines.filter((l) => l.trim().startsWith('env:')).length;
+      const envLineCount = stripYamlBlockScalarContent(lines).filter((line) =>
+        /^\s*["']?env["']?\s*:/.test(line)
+      ).length;
       if (envLineCount > 3) {
         findings.push({
           severity: 'info',

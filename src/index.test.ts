@@ -2808,6 +2808,51 @@ jobs:
   }
 });
 
+test('analyze_workflow_config ignores env-like lines inside block scalar content', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+on: push
+env:
+  GLOBAL_VALUE: global
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    env:
+      JOB_VALUE: job
+    steps:
+      - run: |
+          env:one
+          env:two
+          env:three
+          env:four
+  deploy:
+    runs-on: ubuntu-24.04
+    env:
+      DEPLOY_VALUE: deploy
+  verify:
+    runs-on: ubuntu-24.04
+    env:
+      VERIFY_VALUE: verify
+`,
+      },
+    });
+
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.match(text, /4 separate "env:" blocks detected\./);
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
 test('analyze_workflow_config ignores timeout keys inside block scalar content', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });

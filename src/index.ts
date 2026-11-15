@@ -710,7 +710,7 @@ server.registerTool(
           message: 'Matrix strategy is in use (builds run in parallel across matrix dimensions).',
         });
 
-        const hasFailFast = hasPattern(/fail-fast:\s*false/);
+        const hasFailFast = hasPattern(/fail-fast:\s*false(?=\s|$|[,}])/);
         if (!hasFailFast) {
           findings.push({
             severity: 'info',

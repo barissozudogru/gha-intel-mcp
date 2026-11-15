@@ -551,6 +551,25 @@ function stripYamlComment(line: string): string {
   return line;
 }
 
+function stripYamlBlockScalarContent(lines: string[]): string[] {
+  let scalarIndent: number | null = null;
+
+  return lines.map((line) => {
+    const uncommented = stripYamlComment(line);
+    const trimmed = uncommented.trim();
+    const indent = uncommented.length - uncommented.trimStart().length;
+
+    if (scalarIndent !== null) {
+      if (trimmed === '') return '';
+      if (indent > scalarIndent) return '';
+      scalarIndent = null;
+    }
+
+    if (/:[ \t]*[|>](?:[+-]?\d+|\d+[+-]?|)[ \t]*$/.test(trimmed)) scalarIndent = indent;
+    return uncommented;
+  });
+}
+
 function hasNestedTriggerFilter(
   lines: string[],
   trigger: 'push' | 'pull_request',
@@ -633,7 +652,7 @@ server.registerTool(
 
       const findings: Finding[] = [];
       const lines = content.split('\n');
-      const analysisContent = lines.map(stripYamlComment).join('\n');
+      const analysisContent = stripYamlBlockScalarContent(lines).join('\n');
 
       // Helper: count occurrences
       const occurrences = (pattern: RegExp) => (analysisContent.match(pattern) ?? []).length;

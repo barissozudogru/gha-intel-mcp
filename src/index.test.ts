@@ -2688,5 +2688,37 @@ jobs:
   }
 });
 
+test('analyze_workflow_config ignores timeout keys inside block scalar content', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |2-
+          timeout-minutes: 5
+`,
+      },
+    });
+
+    assert.match(
+      (result.content as Array<{ type: string; text: string }>)[0].text,
+      /No timeout-minutes is set on any job\./
+    );
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
 
 

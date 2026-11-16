@@ -40,6 +40,51 @@ test('durationSeconds handles valid, null, and invalid date inputs', () => {
   assert.equal(durationSeconds(null, '2026-01-01T00:01:30Z'), 0);
 });
 
+test('list_workflow_performance retries transient fetch failures', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const originalFetch = globalThis.fetch;
+  const originalToken = process.env.GITHUB_TOKEN;
+  let fetchCount = 0;
+  process.env.GITHUB_TOKEN = 'test-token';
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    fetchCount++;
+    if (fetchCount === 1) throw new Error('temporary connection reset');
+    const url = String(input);
+    if (url.includes('/actions/workflows/ci.yml/runs')) {
+      return new Response(
+        JSON.stringify({ total_count: 0, workflow_runs: [] }),
+        { status: 200 }
+      );
+    }
+    throw new Error(`Unexpected request: ${url}`);
+  }) as typeof fetch;
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'list_workflow_performance',
+      arguments: { owner: 'test-owner', repo: 'test-repo', workflow_id: 'ci.yml' },
+    });
+    assert.equal(result.isError, undefined);
+    assert.equal(fetchCount, 2);
+    assert.match(
+      (result.content as Array<{ type: string; text: string }>)[0].text,
+      /No completed runs found/
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalToken === undefined) {
+      delete process.env.GITHUB_TOKEN;
+    } else {
+      process.env.GITHUB_TOKEN = originalToken;
+    }
+    await client.close();
+    await server.close();
+  }
+});
+
 test('percentile and avg compute expected summary statistics', () => {
   assert.equal(avg([10, 20, 30]), 20);
   assert.equal(percentile([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 95), 10);

@@ -32,15 +32,26 @@ async function githubFetch<T>(path: string, retries = 3): Promise<T> {
   let delay = 1000;
 
   for (let attempt = 0; attempt <= retries; attempt++) {
-    const res = await fetch(url, {
-      signal: AbortSignal.timeout(15000),
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-        'User-Agent': `gha-intel-mcp/${VERSION}`,
-      },
-    });
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        signal: AbortSignal.timeout(15000),
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+          'User-Agent': `gha-intel-mcp/${VERSION}`,
+        },
+      });
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      if (attempt < retries) {
+        await new Promise((r) => setTimeout(r, delay));
+        delay *= 2;
+        continue;
+      }
+      break;
+    }
 
     const remaining = res.headers.get('X-RateLimit-Remaining');
     if (remaining !== null) {

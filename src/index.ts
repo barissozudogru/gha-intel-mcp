@@ -267,12 +267,14 @@ export function computeRunTiming(jobs: Job[]): { wall_clock_seconds: number; bil
 const ownerSchema = z
   .string()
   .regex(/^[a-zA-Z0-9._-]+$/, 'owner must contain only alphanumeric characters, dots, hyphens, or underscores')
+  .refine((value) => /[a-zA-Z0-9]/.test(value), 'owner must contain at least one alphanumeric character')
   .refine((value) => value !== '.' && value !== '..', 'owner must not be a path traversal segment')
   .describe('GitHub repository owner (user or org)');
 
 const repoSchema = z
   .string()
   .regex(/^[a-zA-Z0-9._-]+$/, 'repo must contain only alphanumeric characters, dots, hyphens, or underscores')
+  .refine((value) => /[a-zA-Z0-9]/.test(value), 'repo must contain at least one alphanumeric character')
   .refine((value) => value !== '.' && value !== '..', 'repo must not be a path traversal segment')
   .describe('GitHub repository name');
 

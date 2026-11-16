@@ -486,6 +486,31 @@ test('get_billing_usage rejects path traversal identifiers through the registere
   }
 });
 
+test('get_billing_usage rejects punctuation-only identifiers before making requests', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const originalFetch = globalThis.fetch;
+  let fetchCount = 0;
+  globalThis.fetch = (async () => {
+    fetchCount++;
+    return new Response('unexpected request', { status: 500 });
+  }) as typeof fetch;
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    for (const arguments_ of [{ owner: '-' }, { owner: 'test-owner', repo: '_' }]) {
+      const result = await client.callTool({ name: 'get_billing_usage', arguments: arguments_ });
+      assert.equal(result.isError, true);
+    }
+    assert.equal(fetchCount, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await client.close();
+    await server.close();
+  }
+});
+
 test('get_billing_usage ignores negative runner minutes when estimating cost', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });

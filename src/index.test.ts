@@ -2885,5 +2885,37 @@ jobs:
   }
 });
 
+test('analyze_workflow_config does not mistake a similarly named artifact action for the official action', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/upload-artifact@v4
+      - uses: actions/download-artifact@v4
+      - uses: acme/actions/upload-artifact-helper@v1
+      - uses: acme/actions/download-artifact-helper@v1
+`,
+      },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.match(text, /1 artifact upload\(s\) and 1 download\(s\) found/);
+    assert.doesNotMatch(text, /2 artifact upload\(s\)/);
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
 
 

@@ -773,8 +773,8 @@ server.registerTool(
       }
 
       // --- Artifact uploads ---
-      const artifactUploadCount = occurrences(/actions\/upload-artifact/g);
-      const artifactDownloadCount = occurrences(/actions\/download-artifact/g);
+      const artifactUploadCount = occurrences(/(?:^|[\s"'=])actions\/upload-artifact(?:@|\/)/g);
+      const artifactDownloadCount = occurrences(/(?:^|[\s"'=])actions\/download-artifact(?:@|\/)/g);
       if (artifactUploadCount > 3) {
         findings.push({
           severity: 'info',

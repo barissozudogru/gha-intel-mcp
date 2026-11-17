@@ -936,7 +936,9 @@ server.registerTool(
       }
 
       // --- Docker layer caching ---
-      const hasDockerBuild = hasPattern(/(?<![\w-])docker\s+build/i) || hasPattern(/docker\/build-push-action/);
+      const hasDockerBuild =
+        hasPattern(/(?<![\w-])docker\s+build/i) ||
+        hasPattern(/(?<![\w/-])docker\/build-push-action(?:@|\/)/);
       const hasDockerCache = hasPattern(/cache-from:/) || hasPattern(/type=gha/);
       if (hasDockerBuild && !hasDockerCache) {
         findings.push({

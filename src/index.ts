@@ -748,7 +748,9 @@ server.registerTool(
           });
         }
 
-        const hasMaxParallel = hasPattern(/max-parallel:/);
+        const hasMaxParallel = hasPattern(
+          /(?:^|[\r\n][ \t]*(?:\?[ \t]*)?|[,{][ \t]*)["']?max-parallel["']?\s*:/m
+        );
         if (!hasMaxParallel) {
           findings.push({
             severity: 'info',

@@ -867,7 +867,11 @@ server.registerTool(
       const ubuntuRunnerLabels = [...analysisContent.matchAll(/runs-on:\s*['"]?(ubuntu-(?:latest|2\d(?:\.\d+)?))(?![A-Za-z0-9_.-])['"]?/g)].map(
         (match) => match[1],
       );
-      const hasUbuntuLatest = ubuntuRunnerLabels.includes('ubuntu-latest');
+      const hasUbuntuLatest =
+        ubuntuRunnerLabels.includes('ubuntu-latest') ||
+        hasPattern(
+          /runs-on:\s*\n(?:[ \t]+-\s*[^\n]*\n)*[ \t]+-\s*["']?ubuntu-latest["']?(?=\s*$)/m
+        );
       if (hasUbuntuLatest) {
         findings.push({
           severity: 'info',

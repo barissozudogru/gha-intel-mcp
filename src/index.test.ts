@@ -3254,6 +3254,93 @@ jobs:
   }
 });
 
+test('analyze_workflow_config does not mistake a prefixed command for a Docker build', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+name: CI
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: mydocker build image
+`,
+      },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.doesNotMatch(text, /Docker build detected but no layer caching is configured\./);
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
+test('analyze_workflow_config detects a Docker build command without layer caching', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: docker build -t app .
+`,
+      },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.match(text, /Docker build detected but no layer caching is configured\./);
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
+test('analyze_workflow_config recognizes the Docker build-push action with layer caching', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: docker/build-push-action@v6
+        with:
+          cache-from: type=gha
+`,
+      },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.match(text, /Docker layer caching is configured\./);
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
 test('analyze_workflow_config does not mistake a similarly named artifact action for the official action', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });

@@ -880,8 +880,8 @@ server.registerTool(
       // --- Workflow triggers ---
       const rootIndentPrefix = `[ \\t]{${rootIndent}}`;
       const hasPushTrigger =
-        hasPattern(new RegExp(`^${rootIndentPrefix}on:\\s*\\n\\s+push:`, 'm')) ||
-        hasPattern(new RegExp(`^${rootIndentPrefix}on:\\s+push`, 'm'));
+        hasPattern(new RegExp(`^${rootIndentPrefix}["']?on["']?:\\s*\\n\\s+["']?push["']?:`, 'm')) ||
+        hasPattern(new RegExp(`^${rootIndentPrefix}["']?on["']?\\s*:\\s+["']?push["']?`, 'm'));
       const hasPullRequestTrigger = hasPattern(/pull_request:/);
       const hasPushPathFilter = hasNestedTriggerFilter(lines, 'push', rootIndent);
 

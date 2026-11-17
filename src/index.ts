@@ -678,13 +678,6 @@ server.registerTool(
       const hasSetupJavaCache = hasPattern(/(?<![\w-])cache:\s*['"]?(?:maven|gradle|sbt)(?=['"]?(?:\s|$|[,}]))/);
       const hasRustCache = hasPattern(/Swatinem\/rust-cache/i);
       const hasSetupGo = hasPattern(/(?:^|[\s"'[\],])actions\/setup-go(?:@|\/)/i);
-      const hasCaching =
-        hasActionsCache ||
-        hasSetupNodeCache ||
-        hasSetupPythonCache ||
-        hasSetupJavaCache ||
-        hasRustCache ||
-        hasSetupGo;
 
       const hasNpmInstall = hasPattern(/(?<![\w-])npm\s+(?:ci|install)(?=$|[\s;&|])/);
       const hasYarnInstall =
@@ -695,6 +688,13 @@ server.registerTool(
       const hasMavenInstall = hasPattern(/(?<![\w-])mvn\s+(?:install|package|test)(?=$|[\s;&|])/);
       const hasDependencyInstall =
         hasNpmInstall || hasYarnInstall || hasPipInstall || hasCargoFetch || hasMavenInstall;
+      const hasCaching =
+        hasActionsCache ||
+        hasSetupNodeCache ||
+        hasSetupPythonCache ||
+        hasSetupJavaCache ||
+        hasRustCache ||
+        (hasSetupGo && !hasDependencyInstall);
 
       if (hasDependencyInstall && !hasCaching) {
         findings.push({

@@ -85,6 +85,77 @@ test('list_workflow_performance retries transient fetch failures', async () => {
   }
 });
 
+test('github retries honor and bound Retry-After values', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const originalFetch = globalThis.fetch;
+  const originalSetTimeout = globalThis.setTimeout;
+  const originalToken = process.env.GITHUB_TOKEN;
+  const delays: number[] = [];
+  let fetchCount = 0;
+  process.env.GITHUB_TOKEN = 'test-token';
+  globalThis.setTimeout = ((callback: (...args: any[]) => void, delay?: number, ...args: any[]) => {
+    if (delay !== undefined && delay >= 1000 && delay !== 60000) delays.push(delay);
+    if (delay !== undefined && delay >= 1000 && delay !== 60000) {
+      callback(...args);
+    } else {
+      return originalSetTimeout(callback, delay, ...args);
+    }
+    return {} as ReturnType<typeof setTimeout>;
+  }) as typeof setTimeout;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    fetchCount++;
+    const url = String(input);
+    if (fetchCount === 1) {
+      return new Response('try again', {
+        status: 429,
+        headers: { 'Retry-After': new Date(Date.now() + 5000).toUTCString() },
+      });
+    }
+    if (fetchCount === 2) {
+      return new Response(JSON.stringify({ total_count: 0, workflow_runs: [] }), { status: 200 });
+    }
+    if (fetchCount === 3) {
+      return new Response('try again', {
+        status: 429,
+        headers: { 'Retry-After': '999999999999' },
+      });
+    }
+    if (url.includes('/actions/workflows/ci.yml/runs')) {
+      return new Response(JSON.stringify({ total_count: 0, workflow_runs: [] }), { status: 200 });
+    }
+    throw new Error(`Unexpected request: ${url}`);
+  }) as typeof fetch;
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'list_workflow_performance',
+      arguments: { owner: 'test-owner', repo: 'test-repo', workflow_id: 'ci.yml' },
+    });
+    assert.equal(result.isError, undefined);
+    const secondResult = await client.callTool({
+      name: 'list_workflow_performance',
+      arguments: { owner: 'test-owner', repo: 'test-repo', workflow_id: 'ci.yml' },
+    });
+    assert.equal(secondResult.isError, undefined);
+    assert.equal(fetchCount, 4);
+    assert.ok(delays[0] >= 3000 && delays[0] <= 5000, `expected HTTP-date delay, got ${delays[0]}`);
+    assert.equal(delays[1], 2_147_483_647);
+  } finally {
+    globalThis.fetch = originalFetch;
+    globalThis.setTimeout = originalSetTimeout;
+    if (originalToken === undefined) {
+      delete process.env.GITHUB_TOKEN;
+    } else {
+      process.env.GITHUB_TOKEN = originalToken;
+    }
+    await client.close();
+    await server.close();
+  }
+});
+
 test('percentile and avg compute expected summary statistics', () => {
   assert.equal(avg([10, 20, 30]), 20);
   assert.equal(percentile([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 95), 10);

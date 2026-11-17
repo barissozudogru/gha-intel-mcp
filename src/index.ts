@@ -16,6 +16,8 @@ const { version: VERSION } = require('../package.json');
 // GitHub API helpers
 // ---------------------------------------------------------------------------
 
+const MAX_TIMER_DELAY_MS = 2_147_483_647;
+
 function githubToken(): string {
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
@@ -60,7 +62,18 @@ async function githubFetch<T>(path: string, retries = 3): Promise<T> {
 
     if (res.status === 429) {
       const retryAfter = res.headers.get('Retry-After');
-      const waitMs = retryAfter ? parseInt(retryAfter, 10) * 1000 : delay;
+      let waitMs = delay;
+      if (retryAfter) {
+        const retryAfterSeconds = Number(retryAfter);
+        if (Number.isFinite(retryAfterSeconds) && retryAfterSeconds >= 0) {
+          waitMs = Math.min(retryAfterSeconds * 1000, MAX_TIMER_DELAY_MS);
+        } else {
+          const retryAt = Date.parse(retryAfter);
+          if (Number.isFinite(retryAt)) {
+            waitMs = Math.min(Math.max(0, retryAt - Date.now()), MAX_TIMER_DELAY_MS);
+          }
+        }
+      }
       if (attempt < retries) {
         await new Promise((r) => setTimeout(r, waitMs));
         delay *= 2;

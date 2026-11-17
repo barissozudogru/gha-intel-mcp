@@ -390,6 +390,7 @@ server.registerTool(
 
           if (!stepDurations[job.name]) stepDurations[job.name] = {};
           for (const step of job.steps) {
+            if (step.conclusion === 'skipped') continue;
             if (!step.started_at || !step.completed_at) continue;
             const stepStart = new Date(step.started_at).getTime();
             const stepEnd = new Date(step.completed_at).getTime();

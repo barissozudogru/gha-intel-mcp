@@ -2264,6 +2264,78 @@ jobs:
   }
 });
 
+test('analyze_workflow_config does not mistake a prefixed max-parallel key for the real setting', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    strategy:
+      not-max-parallel: 4
+      matrix:
+        node: [20]
+    steps: []
+`,
+      },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.match(text, /No max-parallel limit is set on the matrix\./);
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
+test('analyze_workflow_config recognizes block, flow, and explicit max-parallel keys', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    for (const strategy of [
+      `strategy:
+      max-parallel : 4
+      matrix:
+        node: [20]`,
+      `strategy: { matrix: { node: [20] }, max-parallel : 4 }`,
+      `strategy:
+      ? max-parallel
+      : 4
+      matrix:
+        node: [20]`,
+    ]) {
+      const result = await client.callTool({
+        name: 'analyze_workflow_config',
+        arguments: {
+          workflow_content: `
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    ${strategy}
+    steps: []
+`,
+        },
+      });
+      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      assert.doesNotMatch(text, /No max-parallel limit is set on the matrix\./, strategy);
+    }
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
 test('analyze_workflow_config does not accept a suffixed fail-fast value', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });

@@ -687,9 +687,9 @@ server.registerTool(
 
       // --- Caching ---
       const hasActionsCache = hasPattern(/(?:^|[\s"'])actions\/cache(?:@|\/)/);
-      const hasSetupNodeCache = hasPattern(/(?<![\w-])cache:\s*['"]?(?:npm|yarn|pnpm)(?=['"]?(?:\s|$|[,}]))/);
-      const hasSetupPythonCache = hasPattern(/(?<![\w-])cache:\s*['"]?pip(?=['"]?(?:\s|$|[,}]))/);
-      const hasSetupJavaCache = hasPattern(/(?<![\w-])cache:\s*['"]?(?:maven|gradle|sbt)(?=['"]?(?:\s|$|[,}]))/);
+      const hasSetupNodeCache = hasPattern(/(?<![\w-])cache:\s*['"]?(?:npm|yarn|pnpm)(?=['"]?(?:\s|$|[,}\]]))/);
+      const hasSetupPythonCache = hasPattern(/(?<![\w-])cache:\s*['"]?pip(?=['"]?(?:\s|$|[,}\]]))/);
+      const hasSetupJavaCache = hasPattern(/(?<![\w-])cache:\s*['"]?(?:maven|gradle|sbt)(?=['"]?(?:\s|$|[,}\]]))/);
       const hasRustCache = hasPattern(/(?:^|[\s"'=])Swatinem\/rust-cache(?=@|\s|$)/i);
       const hasSetupGo = hasPattern(/(?:^|[\s"'[\],])actions\/setup-go(?:@|\/)/i);
 

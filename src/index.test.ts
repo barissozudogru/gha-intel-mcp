@@ -1637,6 +1637,26 @@ jobs:
     const text = (result.content as Array<{ type: string; text: string }>)[0].text;
     assert.match(text, /\[OK\] \[caching\] Dependency caching is configured\./);
     assert.doesNotMatch(text, /Dependency installation detected but no caching is configured\./);
+
+    const sequenceResult = await client.callTool({
+      name: 'analyze_workflow_config',
+      arguments: {
+        workflow_content: `
+name: CI
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with: [cache: npm]
+      - run: npm ci
+`,
+      },
+    });
+    const sequenceText = (sequenceResult.content as Array<{ type: string; text: string }>)[0].text;
+    assert.match(sequenceText, /\[OK\] \[caching\] Dependency caching is configured\./);
+    assert.doesNotMatch(sequenceText, /Dependency installation detected but no caching is configured\./);
   } finally {
     await client.close();
     await server.close();

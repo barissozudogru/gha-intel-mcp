@@ -943,7 +943,7 @@ server.registerTool(
       const hasDockerBuild =
         hasPattern(/(?<![\w-])docker\s+build/i) ||
         hasPattern(/(?<![\w/-])docker\/build-push-action(?:@|\/)/);
-      const hasDockerCache = hasPattern(/cache-from:/) || hasPattern(/type=gha/);
+      const hasDockerCache = hasPattern(/(?<![\w-])cache-from\s*:/) || hasPattern(/type=gha/);
       if (hasDockerBuild && !hasDockerCache) {
         findings.push({
           severity: 'warning',

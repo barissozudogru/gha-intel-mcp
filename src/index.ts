@@ -684,6 +684,11 @@ server.registerTool(
       // Helper: count occurrences
       const occurrences = (pattern: RegExp) => (analysisContent.match(pattern) ?? []).length;
       const hasPattern = (pattern: RegExp) => pattern.test(analysisContent);
+      const dependencyAnalysisContent = analysisContent
+        .split('\n')
+        .filter((line) => !/^\s*(?:-\s*)?["']?(?:name|description)["']?\s*:/.test(line))
+        .join('\n');
+      const hasDependencyPattern = (pattern: RegExp) => pattern.test(dependencyAnalysisContent);
 
       // --- Caching ---
       const hasActionsCache = hasPattern(/(?:^|[\s"'])actions\/cache(?:@|\/)/);
@@ -693,13 +698,13 @@ server.registerTool(
       const hasRustCache = hasPattern(/(?:^|[\s"'=])Swatinem\/rust-cache(?=@|\s|$)/i);
       const hasSetupGo = hasPattern(/(?:^|[\s"'[\],])actions\/setup-go(?:@|\/)/i);
 
-      const hasNpmInstall = hasPattern(/(?<![\w-])npm\s+(?:ci|install)(?=$|[\s;&|])/);
+      const hasNpmInstall = hasDependencyPattern(/(?<![\w-])npm\s+(?:ci|install)(?=$|[\s;&|])/);
       const hasYarnInstall =
-        hasPattern(/(?<![\w-])yarn\s+install(?=$|[\s;&|])/) ||
-        hasPattern(/(?<![\w-])yarn\b(?!\s+(?:-v|--version|version|--help|help|install(?=$|[\s;&|_-])))(?=\s|$|[;&|])/);
-      const hasPipInstall = hasPattern(/(?<![\w-])pip(?:3(?:\.\d+)?)?\s+install(?=$|[\s;&|])/);
-      const hasCargoFetch = hasPattern(/(?<![\w-])cargo\s+(?:build|test|fetch)(?=$|[\s;&|])/);
-      const hasMavenInstall = hasPattern(/(?<![\w-])mvn\s+(?:install|package|test)(?=$|[\s;&|])/);
+        hasDependencyPattern(/(?<![\w-])yarn\s+install(?=$|[\s;&|])/) ||
+        hasDependencyPattern(/(?<![\w-])yarn\b(?!\s+(?:-v|--version|version|--help|help|install(?=$|[\s;&|_-])))(?=\s|$|[;&|])/);
+      const hasPipInstall = hasDependencyPattern(/(?<![\w-])pip(?:3(?:\.\d+)?)?\s+install(?=$|[\s;&|])/);
+      const hasCargoFetch = hasDependencyPattern(/(?<![\w-])cargo\s+(?:build|test|fetch)(?=$|[\s;&|])/);
+      const hasMavenInstall = hasDependencyPattern(/(?<![\w-])mvn\s+(?:install|package|test)(?=$|[\s;&|])/);
       const hasDependencyInstall =
         hasNpmInstall || hasYarnInstall || hasPipInstall || hasCargoFetch || hasMavenInstall;
       const hasCaching =

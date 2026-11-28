@@ -666,6 +666,64 @@ test('list_workflow_performance excludes skipped steps with timestamps', async (
   }
 });
 
+test('list_workflow_performance excludes non-completed jobs with timestamps', async () => {
+  const server = createMcpServer();
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const originalFetch = globalThis.fetch;
+  const originalToken = process.env.GITHUB_TOKEN;
+  process.env.GITHUB_TOKEN = 'test-token';
+
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes('/actions/workflows/ci.yml/runs')) {
+      return new Response(JSON.stringify({
+        total_count: 1,
+        workflow_runs: [{
+          id: 1,
+          run_number: 1,
+          conclusion: 'success',
+          run_started_at: '2026-01-01T00:00:00Z',
+        }],
+      }), { status: 200 });
+    }
+    if (url.includes('/actions/runs/1/jobs')) {
+      return new Response(JSON.stringify({
+        total_count: 1,
+        jobs: [{
+          id: 1,
+          name: 'still-running',
+          status: 'in_progress',
+          conclusion: null,
+          started_at: '2026-01-01T00:00:00Z',
+          completed_at: '2026-01-01T00:01:00Z',
+          steps: [],
+        }],
+      }), { status: 200 });
+    }
+    throw new Error(`Unexpected request: ${url}`);
+  }) as typeof fetch;
+
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    const result = await client.callTool({
+      name: 'list_workflow_performance',
+      arguments: { owner: 'test-owner', repo: 'test-repo', workflow_id: 'ci.yml' },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    assert.doesNotMatch(text, /still-running/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalToken === undefined) {
+      delete process.env.GITHUB_TOKEN;
+    } else {
+      process.env.GITHUB_TOKEN = originalToken;
+    }
+    await client.close();
+    await server.close();
+  }
+});
+
 test('get_billing_usage rejects path traversal identifiers through the registered tool', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });

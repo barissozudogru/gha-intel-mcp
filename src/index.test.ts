@@ -328,6 +328,25 @@ test('computeRunTiming excludes skipped jobs even when timestamps are present', 
   });
 });
 
+test('computeRunTiming excludes non-completed jobs even when timestamps are present', () => {
+  const jobs = [
+    {
+      id: 1,
+      name: 'in progress',
+      status: 'in_progress',
+      conclusion: null,
+      started_at: '2026-01-01T00:00:00Z',
+      completed_at: '2026-01-01T00:05:00Z',
+      steps: [],
+    },
+  ];
+
+  assert.deepEqual(computeRunTiming(jobs), {
+    wall_clock_seconds: 0,
+    billable_seconds: 0,
+  });
+});
+
 test('list_workflow_performance excludes jobs whose completion precedes their start', async () => {
   const server = createMcpServer();
   const client = new Client({ name: 'test-client', version: '1.0.0' });
